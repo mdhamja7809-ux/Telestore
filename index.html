@@ -1607,80 +1607,214 @@ function _setCategoryCore(cat){
 }
 
 // ── SYNC FROM TELEGRAM ────────────────
-// Reads latest messages from bot chat and imports any new files
-// that aren't already in local index
+// Bot API has NO history endpoint. The only way to read past messages
+// is to probe message IDs using forwardMessage (we forward to same chat,
+// check if document exists, then delete the forwarded copy).
+// We track the highest known msg_id and scan upward for new ones.
 let syncing = false;
+
 async function syncFromTelegram(){
   if(syncing){ toast('Sync already running…','info'); return; }
   syncing = true;
   const btn = document.getElementById('sync-btn');
   if(btn){ btn.style.animation='spin .7s linear infinite'; btn.disabled=true; }
-  toast('Syncing from Telegram…','info');
+
+  // Show sync progress modal
+  const overlay = document.createElement('div');
+  overlay.id = 'sync-overlay';
+  overlay.style.cssText=`position:fixed;inset:0;background:rgba(15,20,40,.6);backdrop-filter:blur(8px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:1.5rem;`;
+  overlay.innerHTML=`
+    <div style="background:var(--white);border-radius:24px;padding:2rem;max-width:360px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.3);text-align:center;">
+      <div style="font-size:2.5rem;margin-bottom:.8rem;">🔄</div>
+      <div style="font-weight:900;font-size:1.1rem;margin-bottom:.4rem;">Syncing Files</div>
+      <div id="sync-lbl" style="font-size:.82rem;color:var(--muted);margin-bottom:1.2rem;">Scanning your Telegram storage…</div>
+      <div style="background:var(--border);border-radius:8px;height:8px;overflow:hidden;margin-bottom:.8rem;">
+        <div id="sync-bar" style="height:100%;background:linear-gradient(90deg,var(--tg),var(--green));border-radius:8px;width:0%;transition:width .3s;"></div>
+      </div>
+      <div id="sync-count" style="font-size:.75rem;color:var(--muted);font-weight:700;">0 files found</div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  function setLbl(t){ const el=document.getElementById('sync-lbl'); if(el) el.textContent=t; }
+  function setBar(p){ const el=document.getElementById('sync-bar'); if(el) el.style.width=p+'%'; }
+  function setCount(n){ const el=document.getElementById('sync-count'); if(el) el.textContent=n+' file'+(n!==1?'s':'')+' found'; }
 
   try{
-    let offset = 0;
-    let imported = 0;
     const existing = new Set(idx().map(f=>String(f.msg_id)));
+    let imported = 0;
+    const chunkGroups = {}; // group TSCHUNK parts by filename+totalChunks
 
-    // getUpdates with offset trick — fetch all history
-    // We use forwardMessages approach: scan up to 100 updates
-    // For full history we scan multiple rounds
-    let keepGoing = true;
-    let round = 0;
-    while(keepGoing && round < 20){
-      const r = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?chat_id=${CHAT}&limit=100&offset=${offset}`).then(x=>x.json());
-      if(!r.ok || !r.result.length){ keepGoing=false; break; }
+    // ── STEP 1: getUpdates to catch any recent messages not yet indexed ──
+    setLbl('Checking recent messages…'); setBar(10);
+    const upd = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?limit=100&allowed_updates=["message","channel_post"]`).then(x=>x.json());
 
-      for(const upd of r.result){
-        offset = upd.update_id + 1;
-        const msg = upd.message || upd.channel_post;
-        if(!msg || String(msg.chat.id) !== String(CHAT)) continue;
-        if(!msg.document) continue;
-
-        const mid = String(msg.message_id);
-        if(existing.has(mid)) continue; // already indexed
-
-        const doc = msg.document;
-        const cap = msg.caption || '';
-
-        // Parse TeleStore caption format
-        let name, mime, size, chunked=false, chunkMeta=null;
-        if(cap.startsWith('TeleStore|')){
-          const parts = cap.split('|');
-          name=parts[1]; mime=parts[2]; size=parseInt(parts[3])||doc.file_size||0;
-        } else if(cap.startsWith('TSCHUNK|')){
-          // chunk piece — skip individual chunks, handle as group below
-          continue;
-        } else {
-          name = doc.file_name || 'file_'+mid;
-          mime = doc.mime_type || '';
-          size = doc.file_size || 0;
-        }
-
-        const t = ftype(name, mime);
-        const entry = {
-          msg_id: msg.message_id, file_id: doc.file_id,
-          name, size, mime, type: t,
-          date: (msg.date||0)*1000, thumb: null, chunked: false
-        };
-        addIdx(entry);
-        existing.add(mid);
-        files.unshift(entry);
-        imported++;
+    const recentMsgs = [];
+    if(upd.ok){
+      for(const u of upd.result){
+        const msg = u.message || u.channel_post;
+        if(msg && String(msg.chat?.id)===String(CHAT)) recentMsgs.push(msg);
       }
-      round++;
-      if(r.result.length < 100) keepGoing = false;
     }
 
-    files = idx(); // reload fresh sorted
-    applyFilter(); updateCounts();
-    if(imported > 0){
-      toast(`✓ Synced ${imported} new file${imported>1?'s':''}!`,'ok');
-    } else {
-      toast('Already up to date!','ok');
+    // ── STEP 2: Scan by probing message IDs via forwardMessage ──
+    // Find highest known msg_id in our index
+    const allIds = idx().map(f=>f.msg_id);
+    const knownMax = allIds.length ? Math.max(...allIds) : 0;
+
+    // We'll scan from knownMax+1 upward to find new files
+    // AND scan backward from knownMax to find old files we missed (first sync)
+    const firstSync = allIds.length === 0;
+
+    setLbl(firstSync ? 'First sync — scanning all messages…' : 'Looking for new files…');
+    setBar(20);
+
+    // Probe a range of message IDs
+    // Forward each ID to same chat, check if it has a document, then delete
+    async function probeMsg(msgId){
+      try{
+        const r = await fetch(`https://api.telegram.org/bot${TOKEN}/forwardMessage`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ chat_id: CHAT, from_chat_id: CHAT, message_id: msgId })
+        }).then(x=>x.json());
+
+        if(!r.ok) return null; // message doesn't exist
+
+        const fwd = r.result;
+        // Delete the forwarded copy immediately
+        await fetch(`https://api.telegram.org/bot${TOKEN}/deleteMessage`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ chat_id: CHAT, message_id: fwd.message_id })
+        });
+
+        // Check if original had a document
+        if(fwd.document){
+          return { msg_id: msgId, doc: fwd.document, caption: fwd.caption||'', date: fwd.forward_date||fwd.date||0 };
+        }
+        return null; // not a document message
+      }catch{ return null; }
     }
+
+    function parseEntry(msgId, doc, cap, date){
+      let name, mime, size;
+      if(cap.startsWith('TeleStore|')){
+        const p=cap.split('|'); name=p[1]; mime=p[2]; size=parseInt(p[3])||doc.file_size||0;
+      } else if(cap.startsWith('TSCHUNK|')){
+        const p=cap.split('|');
+        // p: TSCHUNK|filename|mime|totalsize|chunkIndex|totalChunks
+        const fname=p[1], fmime=p[2], fsize=parseInt(p[3])||0, cidx=parseInt(p[4]), ctotal=parseInt(p[5]);
+        const key=fname+'||'+ctotal;
+        if(!chunkGroups[key]) chunkGroups[key]={name:fname,mime:fmime,size:fsize,total:ctotal,chunks:[],date:date*1000};
+        chunkGroups[key].chunks[cidx]={msg_id:msgId, file_id:doc.file_id};
+        return null; // will be assembled after all chunks found
+      } else {
+        name=doc.file_name||('file_'+msgId); mime=doc.mime_type||''; size=doc.file_size||0;
+      }
+      return { msg_id:msgId, file_id:doc.file_id, name, size, mime, type:ftype(name,mime), date:date*1000, thumb:null, chunked:false };
+    }
+
+    // Determine scan range
+    // For first sync: scan last 2000 message IDs before current
+    // For subsequent: scan from knownMax+1 to knownMax+200
+    let scanStart, scanEnd;
+    if(firstSync){
+      // Get approximate current max ID by sending a probe
+      // Use getUpdates offset trick to get latest update_id
+      const latest = await TG.api('getUpdates',{limit:1,offset:-1});
+      let approxMax = 1;
+      if(latest.ok && latest.result.length){
+        const msg = latest.result[0].message || latest.result[0].channel_post;
+        if(msg) approxMax = msg.message_id;
+        else approxMax = latest.result[0].update_id;
+      }
+      scanStart = Math.max(1, approxMax - 2000);
+      scanEnd   = approxMax + 10;
+    } else {
+      scanStart = knownMax + 1;
+      scanEnd   = knownMax + 300;
+    }
+
+    setLbl(`Scanning messages ${scanStart}–${scanEnd}…`);
+
+    // Probe in parallel batches of 5 for speed
+    const BATCH = 5;
+    const total = scanEnd - scanStart + 1;
+    let done = 0; let emptyStreak = 0;
+
+    for(let i=scanStart; i<=scanEnd; i+=BATCH){
+      const batch = [];
+      for(let j=i; j<Math.min(i+BATCH, scanEnd+1); j++) batch.push(j);
+
+      const results = await Promise.all(batch.map(id => existing.has(String(id)) ? null : probeMsg(id)));
+
+      for(let k=0; k<results.length; k++){
+        const res = results[k];
+        const msgId = batch[k];
+        done++;
+
+        if(res){
+          emptyStreak = 0;
+          if(!existing.has(String(msgId))){
+            const entry = parseEntry(msgId, res.doc, res.caption, res.date);
+            if(entry){
+              addIdx(entry); existing.add(String(msgId));
+              files.unshift(entry); imported++;
+              setCount(imported);
+            }
+          }
+        } else {
+          emptyStreak++;
+        }
+      }
+
+      const pct = 20 + Math.round((done/total)*70);
+      setBar(pct);
+      setLbl(`Scanned ${done}/${total} messages… ${imported} found`);
+
+      // If 100 consecutive empty IDs after first sync, stop early
+      if(!firstSync && emptyStreak > 100) break;
+    }
+
+    // ── STEP 3: Assemble chunked files ──
+    setLbl('Assembling chunked files…'); setBar(95);
+    for(const key of Object.keys(chunkGroups)){
+      const g = chunkGroups[key];
+      if(g.chunks.filter(Boolean).length === g.total){
+        const firstChunk = g.chunks[0];
+        if(!existing.has(String(firstChunk.msg_id))){
+          const entry = {
+            msg_id: firstChunk.msg_id, file_id: firstChunk.file_id,
+            name: g.name, size: g.size, mime: g.mime,
+            type: ftype(g.name, g.mime), date: g.date, thumb: null,
+            chunked: true, chunks: g.chunks, totalChunks: g.total
+          };
+          addIdx(entry); files.unshift(entry); imported++;
+        }
+      }
+    }
+
+    // ── Also process recent updates ──
+    for(const msg of recentMsgs){
+      if(!msg.document) continue;
+      const mid = String(msg.message_id);
+      if(existing.has(mid)) continue;
+      const entry = parseEntry(msg.message_id, msg.document, msg.caption||'', msg.date||0);
+      if(entry){ addIdx(entry); existing.add(mid); files.unshift(entry); imported++; }
+    }
+
+    setBar(100);
+    files = idx();
+    applyFilter(); updateCounts();
+
+    setTimeout(()=>{ overlay.remove(); },500);
+    if(imported > 0) toast(`✓ Synced ${imported} new file${imported>1?'s':''}!`,'ok');
+    else toast('Already up to date ✓','ok');
+
   }catch(e){
-    toast('Sync failed: '+e.message,'err');
+    overlay.remove();
+    toast('Sync error: '+e.message,'err');
+    console.error(e);
   }
 
   syncing = false;
