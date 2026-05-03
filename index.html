@@ -662,6 +662,7 @@ body {
 
 /* spinner */
 .spin { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--tg); border-radius: 50%; animation: spin .7s linear infinite; margin: 3rem auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 #file-input { display: none; }
 
@@ -964,11 +965,13 @@ body {
       <input type="text" placeholder="Search your files…" id="search-inp" oninput="doSearch()">
     </div>
     <div class="topbar-right">
-      <div class="user-pill">
+      <div class="user-pill" onclick="showAccountMenu()" style="cursor:pointer;" title="Account & Settings">
         <div class="user-avatar" id="user-av">U</div>
         <span id="user-name-top">My Storage</span>
+        <span style="font-size:.7rem;margin-left:2px;opacity:.6;">▾</span>
       </div>
-      <button class="icon-btn" title="Refresh" onclick="loadFiles()">🔄</button>
+      <button class="icon-btn" id="sync-btn" title="Sync from Telegram" onclick="syncFromTelegram()" style="font-size:.85rem;">🔄</button>
+      <button class="icon-btn" title="Account Menu" onclick="showAccountMenu()" style="display:none;" id="acct-btn">👤</button>
       <button class="up-btn" onclick="openDrop()">⬆ Upload</button>
     </div>
   </div>
@@ -1016,7 +1019,7 @@ body {
   <div class="dp-zone" id="dp-zone" onclick="document.getElementById('file-input').click()">
     <div class="dp-zone-icon">📂</div>
     <div class="dp-zone-text">Drop files here or tap to choose</div>
-    <div class="dp-zone-sub">Up to 50MB per file</div>
+    <div class="dp-zone-sub">Any size — large files split automatically</div>
   </div>
   <div class="dp-list" id="dp-list"></div>
 </div>
@@ -1058,6 +1061,9 @@ body {
   </button>
   <button class="mn-item" onclick="openDrop()">
     <span class="mn-icon">⬆️</span><span class="mn-label">Upload</span>
+  </button>
+  <button class="mn-item" onclick="showAccountMenu()">
+    <span class="mn-icon">👤</span><span class="mn-label">Account</span>
   </button>
 </nav>
 
@@ -1249,12 +1255,7 @@ function fcolor(t){ return {image:'c-img',video:'c-vid',pdf:'c-pdf',audio:'c-aud
 
 // ── FILTER & RENDER ───────────────────
 function setCategory(cat,btn){
-  category=cat;
-  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  const labels={all:'All Files',image:'Photos',video:'Videos',pdf:'PDFs',audio:'Audio',document:'Documents',archive:'Archives'};
-  document.getElementById('cat-title').textContent=labels[cat]||'Files';
-  applyFilter();
+  _setCategoryCore(cat);
 }
 
 function doSearch(){ applyFilter(); }
@@ -1341,46 +1342,156 @@ function setupDrag(){
 
 function onFilePick(fs){ [...fs].forEach(upload); }
 
+const CHUNK = 45 * 1024 * 1024; // 45 MB per chunk (safe under 50MB bot limit)
+
 async function upload(file){
-  if(file.size>50*1024*1024){ toast('File too large (50MB max)','err'); return; }
-  const id='u'+Date.now()+Math.random().toString(36).slice(2);
-  const list=document.getElementById('dp-list');
+  const needsSplit = file.size > CHUNK;
+  const id = 'u'+Date.now()+Math.random().toString(36).slice(2);
+  const list = document.getElementById('dp-list');
+  const totalChunks = needsSplit ? Math.ceil(file.size / CHUNK) : 1;
+
   list.insertAdjacentHTML('beforeend',`
     <div id="${id}" class="dp-item">
       <span>${ficon(ftype(file.name,file.type))}</span>
       <div style="flex:1;min-width:0;">
-        <div class="dp-item-name">${esc(file.name)}</div>
-        <div class="dp-bar"><div class="dp-fill" id="${id}p" style="width:15%"></div></div>
+        <div class="dp-item-name">${esc(file.name)} ${needsSplit?`<span style="font-size:.65rem;color:var(--tg);background:var(--tg-light);padding:1px 6px;border-radius:4px;margin-left:4px;">${totalChunks} parts</span>`:''}</div>
+        <div style="font-size:.65rem;color:var(--muted);margin-bottom:3px;" id="${id}lbl">${needsSplit?'Splitting & uploading…':'Uploading…'}</div>
+        <div class="dp-bar"><div class="dp-fill" id="${id}p" style="width:3%"></div></div>
       </div>
-      <span class="dp-status" id="${id}s">…</span>
+      <span class="dp-status" id="${id}s">${needsSplit?'0/'+totalChunks:'…'}</span>
     </div>`);
 
   try{
-    const r=await TG.sendDoc(file);
-    if(!r.ok) throw new Error(r.description);
-    document.getElementById(id+'p').style.width='100%';
-    document.getElementById(id+'s').textContent='✓';
+    const t = ftype(file.name, file.type);
+    let thumb = null;
+    if(t==='image' && file.size < 3*1024*1024) thumb = await readDU(file);
 
-    const doc=r.result.document;
-    const t=ftype(file.name,file.type||doc?.mime_type||'');
-    let thumb=null;
-    if(t==='image'&&file.size<3*1024*1024) thumb=await readDU(file);
+    if(!needsSplit){
+      // ── Single file upload (under 45MB) ──
+      const r = await TG.sendDoc(file);
+      if(!r.ok) throw new Error(r.description);
+      document.getElementById(id+'p').style.width='100%';
+      document.getElementById(id+'s').textContent='✓';
+      const doc = r.result.document;
+      const entry = {
+        msg_id: r.result.message_id, file_id: doc.file_id,
+        name: file.name, size: file.size,
+        mime: file.type||doc?.mime_type||'', type: t,
+        date: Date.now(), thumb, chunked: false
+      };
+      addIdx(entry); files.unshift(entry);
+    } else {
+      // ── Chunked upload (over 45MB) ──
+      const chunkIds = []; // store msg_id + file_id for each chunk
+      for(let i=0; i<totalChunks; i++){
+        const start = i * CHUNK;
+        const end   = Math.min(start + CHUNK, file.size);
+        const blob  = file.slice(start, end);
+        // Name each chunk: filename.part001, filename.part002 …
+        const partNum = String(i+1).padStart(3,'0');
+        const chunkFile = new File([blob], `${file.name}.part${partNum}`, {type:'application/octet-stream'});
 
-    const entry={msg_id:r.result.message_id,file_id:doc.file_id,name:file.name,size:file.size,mime:file.type||doc?.mime_type||'',type:t,date:Date.now(),thumb};
-    addIdx(entry);
-    files.unshift(entry);
-    applyFilter();
-    updateCounts();
+        // Caption carries metadata for reassembly
+        const caption = `TSCHUNK|${file.name}|${file.type||''}|${file.size}|${i}|${totalChunks}`;
+        const fd = new FormData();
+        fd.append('chat_id', CHAT);
+        fd.append('document', chunkFile, chunkFile.name);
+        fd.append('caption', caption);
+
+        const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendDocument`,{method:'POST',body:fd}).then(x=>x.json());
+        if(!r.ok) throw new Error(`Part ${i+1} failed: ${r.description}`);
+
+        chunkIds.push({ msg_id: r.result.message_id, file_id: r.result.document.file_id });
+
+        // Update progress
+        const pct = Math.round(((i+1)/totalChunks)*100);
+        document.getElementById(id+'p').style.width = pct+'%';
+        document.getElementById(id+'s').textContent = (i+1)+'/'+totalChunks;
+        document.getElementById(id+'lbl').textContent = `Uploading part ${i+1} of ${totalChunks}…`;
+      }
+
+      // Store as a single "chunked" entry in index
+      const entry = {
+        msg_id: chunkIds[0].msg_id,   // use first chunk's msg_id as ID
+        file_id: chunkIds[0].file_id,
+        name: file.name, size: file.size,
+        mime: file.type||'', type: t,
+        date: Date.now(), thumb,
+        chunked: true, chunks: chunkIds, totalChunks
+      };
+      addIdx(entry); files.unshift(entry);
+      document.getElementById(id+'s').textContent='✓';
+      document.getElementById(id+'lbl').textContent=`All ${totalChunks} parts uploaded!`;
+    }
+
+    applyFilter(); updateCounts();
     toast(file.name+' uploaded!','ok');
-    setTimeout(()=>document.getElementById(id)?.remove(),2500);
+    setTimeout(()=>document.getElementById(id)?.remove(), 3000);
+
   }catch(e){
     document.getElementById(id+'s').textContent='✗';
     document.getElementById(id+'p').style.background='var(--red)';
+    document.getElementById(id+'lbl').textContent='Failed!';
     toast('Upload failed: '+e.message,'err');
   }
 }
 
 function readDU(f){ return new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(f); }); }
+
+// ── CHUNKED DOWNLOAD & REASSEMBLE ────
+async function downloadChunked(f){
+  const body = document.getElementById('m-body');
+
+  // Show reassembly progress UI
+  body.innerHTML=`
+    <div style="text-align:center;padding:2rem;width:100%;">
+      <div style="font-size:3rem;margin-bottom:1rem;">🔧</div>
+      <div style="font-weight:900;font-size:1rem;margin-bottom:.5rem;">${esc(f.name)}</div>
+      <div style="color:var(--muted);font-size:.82rem;margin-bottom:1.2rem;">Reassembling ${f.totalChunks} parts… please wait</div>
+      <div style="background:var(--border);border-radius:8px;height:8px;overflow:hidden;max-width:320px;margin:0 auto 1rem;">
+        <div id="reassemble-bar" style="height:100%;background:linear-gradient(90deg,var(--tg),var(--green));border-radius:8px;width:0%;transition:width .3s;"></div>
+      </div>
+      <div id="reassemble-lbl" style="font-size:.78rem;color:var(--muted);font-weight:700;">Fetching part 1 of ${f.totalChunks}…</div>
+    </div>`;
+
+  try{
+    const buffers = [];
+    for(let i=0; i<f.chunks.length; i++){
+      document.getElementById('reassemble-lbl').textContent=`Fetching part ${i+1} of ${f.totalChunks}…`;
+      const url = await TG.link(f.chunks[i].file_id);
+      if(!url) throw new Error(`Cannot get part ${i+1}`);
+      const res = await fetch(url);
+      if(!res.ok) throw new Error(`Download failed for part ${i+1}`);
+      const buf = await res.arrayBuffer();
+      buffers.push(buf);
+      const pct = Math.round(((i+1)/f.chunks.length)*100);
+      document.getElementById('reassemble-bar').style.width = pct+'%';
+    }
+
+    // Merge all ArrayBuffers into one Blob
+    document.getElementById('reassemble-lbl').textContent='Merging parts…';
+    const merged = new Blob(buffers, {type: f.mime||'application/octet-stream'});
+    const dlUrl  = URL.createObjectURL(merged);
+
+    // Trigger download
+    const a = document.createElement('a');
+    a.href = dlUrl;
+    a.download = f.name;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(dlUrl), 5000);
+
+    body.innerHTML=`
+      <div style="text-align:center;padding:2rem;">
+        <div style="font-size:3rem;margin-bottom:1rem;">✅</div>
+        <div style="font-weight:900;color:var(--green);">Download started!</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-top:.5rem;">${esc(f.name)} · ${fmtSz(f.size)}</div>
+      </div>`;
+    toast(f.name+' downloaded!','ok');
+  }catch(e){
+    body.innerHTML=`<div style="text-align:center;color:var(--red);padding:2rem;font-weight:700;">❌ ${e.message}</div>`;
+    toast('Reassembly failed: '+e.message,'err');
+  }
+}
 
 // ── OPEN / VIEW ───────────────────────
 async function openFile(id){
@@ -1473,23 +1584,149 @@ function toast(msg,type='info'){
   setTimeout(()=>{t.style.opacity='0';t.style.transform='scale(.9)';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3000);
 }
 
-// ── MOBILE NAV ────────────────────────
+// ── MOBILE NAV (fixed — no recursive override) ────
 function mobileNav(cat, btn){
   document.querySelectorAll('.mn-item').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  // mirror to sidebar
-  const sideBtn=document.querySelector(`.sb-item[onclick*="'${cat}'"]`);
-  if(sideBtn) setCategory(cat, sideBtn);
-  else setCategory(cat, {classList:{add:()=>{},remove:()=>{}}});
+  // directly call core logic without triggering override loop
+  _setCategoryCore(cat);
 }
 
-// sync mobile nav active state when sidebar used
-const _origSetCat=setCategory;
-function setCategory(cat,btn){
-  _origSetCat(cat,btn);
+function _setCategoryCore(cat){
+  category = cat;
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  const sideBtn = document.querySelector(`.sb-item[onclick*="'${cat}'"]`);
+  if(sideBtn) sideBtn.classList.add('active');
+  const labels={all:'All Files',image:'Photos',video:'Videos',pdf:'PDFs',audio:'Audio',document:'Documents',archive:'Archives'};
+  document.getElementById('cat-title').textContent = labels[cat]||'Files';
+  applyFilter();
+  // sync mobile nav dot
   document.querySelectorAll('.mn-item').forEach(b=>b.classList.remove('active'));
-  const mn=document.getElementById('mn-'+cat);
+  const mn = document.getElementById('mn-'+cat);
   if(mn) mn.classList.add('active');
+}
+
+// ── SYNC FROM TELEGRAM ────────────────
+// Reads latest messages from bot chat and imports any new files
+// that aren't already in local index
+let syncing = false;
+async function syncFromTelegram(){
+  if(syncing){ toast('Sync already running…','info'); return; }
+  syncing = true;
+  const btn = document.getElementById('sync-btn');
+  if(btn){ btn.style.animation='spin .7s linear infinite'; btn.disabled=true; }
+  toast('Syncing from Telegram…','info');
+
+  try{
+    let offset = 0;
+    let imported = 0;
+    const existing = new Set(idx().map(f=>String(f.msg_id)));
+
+    // getUpdates with offset trick — fetch all history
+    // We use forwardMessages approach: scan up to 100 updates
+    // For full history we scan multiple rounds
+    let keepGoing = true;
+    let round = 0;
+    while(keepGoing && round < 20){
+      const r = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?chat_id=${CHAT}&limit=100&offset=${offset}`).then(x=>x.json());
+      if(!r.ok || !r.result.length){ keepGoing=false; break; }
+
+      for(const upd of r.result){
+        offset = upd.update_id + 1;
+        const msg = upd.message || upd.channel_post;
+        if(!msg || String(msg.chat.id) !== String(CHAT)) continue;
+        if(!msg.document) continue;
+
+        const mid = String(msg.message_id);
+        if(existing.has(mid)) continue; // already indexed
+
+        const doc = msg.document;
+        const cap = msg.caption || '';
+
+        // Parse TeleStore caption format
+        let name, mime, size, chunked=false, chunkMeta=null;
+        if(cap.startsWith('TeleStore|')){
+          const parts = cap.split('|');
+          name=parts[1]; mime=parts[2]; size=parseInt(parts[3])||doc.file_size||0;
+        } else if(cap.startsWith('TSCHUNK|')){
+          // chunk piece — skip individual chunks, handle as group below
+          continue;
+        } else {
+          name = doc.file_name || 'file_'+mid;
+          mime = doc.mime_type || '';
+          size = doc.file_size || 0;
+        }
+
+        const t = ftype(name, mime);
+        const entry = {
+          msg_id: msg.message_id, file_id: doc.file_id,
+          name, size, mime, type: t,
+          date: (msg.date||0)*1000, thumb: null, chunked: false
+        };
+        addIdx(entry);
+        existing.add(mid);
+        files.unshift(entry);
+        imported++;
+      }
+      round++;
+      if(r.result.length < 100) keepGoing = false;
+    }
+
+    files = idx(); // reload fresh sorted
+    applyFilter(); updateCounts();
+    if(imported > 0){
+      toast(`✓ Synced ${imported} new file${imported>1?'s':''}!`,'ok');
+    } else {
+      toast('Already up to date!','ok');
+    }
+  }catch(e){
+    toast('Sync failed: '+e.message,'err');
+  }
+
+  syncing = false;
+  if(btn){ btn.style.animation=''; btn.disabled=false; }
+}
+
+// ── DISCONNECT SHORTCUT (top menu) ────
+function showAccountMenu(){
+  const existing = document.getElementById('acct-menu');
+  if(existing){ existing.remove(); return; }
+  const menu = document.createElement('div');
+  menu.id = 'acct-menu';
+  menu.style.cssText=`
+    position:fixed; top:60px; right:12px; z-index:500;
+    background:var(--white); border:2px solid var(--border);
+    border-radius:16px; box-shadow:var(--shadow-lg);
+    padding:8px; min-width:200px;
+    animation: popIn .2s cubic-bezier(.34,1.56,.64,1);
+  `;
+  menu.innerHTML=`
+    <div style="padding:10px 14px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;">
+      <div style="font-weight:900;font-size:.9rem;">${esc(USER_NAME||'My Storage')}</div>
+      <div style="font-size:.72rem;color:var(--muted);font-family:var(--mono);">@${esc(BOT_NAME||'bot')}</div>
+    </div>
+    <button onclick="syncFromTelegram();document.getElementById('acct-menu')?.remove();"
+      style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border:none;background:none;font-family:var(--font);font-weight:700;font-size:.85rem;color:var(--text);cursor:pointer;border-radius:10px;transition:background .15s;"
+      onmouseover="this.style.background='var(--tg-light)'" onmouseout="this.style.background='none'">
+      🔄 Sync from Telegram
+    </button>
+    <button onclick="loadFiles();document.getElementById('acct-menu')?.remove();"
+      style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border:none;background:none;font-family:var(--font);font-weight:700;font-size:.85rem;color:var(--text);cursor:pointer;border-radius:10px;transition:background .15s;"
+      onmouseover="this.style.background='var(--tg-light)'" onmouseout="this.style.background='none'">
+      📁 Refresh Files
+    </button>
+    <div style="height:1px;background:var(--border);margin:6px 0;"></div>
+    <button onclick="disconnect();"
+      style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border:none;background:none;font-family:var(--font);font-weight:700;font-size:.85rem;color:var(--red);cursor:pointer;border-radius:10px;transition:background .15s;"
+      onmouseover="this.style.background='var(--red-light)'" onmouseout="this.style.background='none'">
+      ⏏️ Disconnect
+    </button>
+  `;
+  document.body.appendChild(menu);
+  // close on outside click
+  setTimeout(()=>document.addEventListener('click', function h(e){
+    if(!menu.contains(e.target)){ menu.remove(); document.removeEventListener('click',h); }
+  }),50);
 }
 
 // ── KEYBOARD ──────────────────────────
