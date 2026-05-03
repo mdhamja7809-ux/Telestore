@@ -668,12 +668,142 @@ body {
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
 
+/* ── MOBILE RESPONSIVE ───────────────────────────── */
 @media (max-width: 640px) {
+
+  /* WIZARD */
+  #wizard { padding: .75rem .75rem 1.5rem; justify-content: flex-start; padding-top: 1.5rem; }
+  .wiz-card { border-radius: 20px; max-width: 100%; }
+  .wiz-step { padding: 1.2rem 1.2rem 1.5rem; }
+  .step-emoji { font-size: 2.2rem; margin-bottom: .6rem; }
+  .step-title { font-size: 1.2rem; }
+  .step-desc  { font-size: .85rem; margin-bottom: 1rem; }
+  .instr { padding: .9rem 1rem; gap: 10px; margin-bottom: .7rem; }
+  .instr-num { width: 24px; height: 24px; font-size: .72rem; flex-shrink: 0; }
+  .instr-text { font-size: .8rem; }
+  .open-tg-btn { padding: 12px; font-size: .88rem; }
+  .btn-primary { padding: 13px; font-size: .92rem; }
+  .btn-secondary { padding: 11px; font-size: .85rem; }
+  .inp { font-size: .8rem; padding: 11px 13px; }
+  .field label { font-size: .82rem; }
+  .field .hint { font-size: .72rem; }
+
+  /* Privacy box on welcome step */
+  #s0 > div[style] { padding: 11px 13px !important; }
+  #s0 > div[style] div:first-child { font-size: .82rem !important; }
+  #s0 > div[style] div:last-child  { font-size: .76rem !important; }
+
+  /* APP TOPBAR */
+  .topbar { padding: 0 .8rem; height: 56px; gap: .6rem; }
+  .app-logo { font-size: 1.1rem; }
+  .topbar-search { flex: 1; min-width: 0; padding: 0 10px; }
+  .topbar-search input { font-size: .82rem; padding: 8px 0; }
+  .user-pill { display: none; }          /* hide on small screens */
+  .up-btn { padding: 8px 14px; font-size: .8rem; gap: 5px; white-space: nowrap; }
+  .icon-btn { width: 34px; height: 34px; font-size: .88rem; }
+
+  /* APP BODY — hide sidebar, full width main */
+  .app-body { height: calc(100vh - 56px); }
   .sidebar { display: none; }
-  .wiz-step { padding: 1.5rem; }
-  .file-grid { grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); }
-  .drop-panel { width: calc(100vw - 2rem); right: 1rem; }
+  .main { padding: .9rem .9rem 5rem; }   /* bottom pad for mobile nav */
+
+  /* CAT HEADER */
+  .cat-header { margin-bottom: .8rem; gap: .5rem; }
+  .cat-title { font-size: 1.1rem; }
+  .cat-sub   { font-size: .75rem; }
+  .vbtn { width: 32px; height: 32px; font-size: .88rem; }
+
+  /* FILE GRID — 2 columns on phone */
+  .file-grid { grid-template-columns: repeat(2, 1fr); gap: .7rem; }
+  .fc-thumb { font-size: 2.2rem; }
+  .fc-name  { font-size: .72rem; }
+  .fc-meta  { font-size: .62rem; }
+  .fc-body  { padding: 8px 10px; }
+
+  /* FILE CARD ACTIONS — always visible on mobile (no hover) */
+  .fc-actions { opacity: 1; top: 6px; right: 6px; }
+  .fca { width: 26px; height: 26px; font-size: .7rem; }
+
+  /* FILE LIST */
+  .file-row { padding: 10px 12px; gap: 10px; border-radius: 12px; }
+  .fr-icon  { font-size: 1.3rem; width: 28px; }
+  .fr-name  { font-size: .82rem; }
+  .fr-meta  { display: none; }           /* hide size/date on list in mobile */
+  .fr-actions { opacity: 1; }            /* always show on mobile */
+
+  /* UPLOAD PANEL — full width bottom sheet */
+  .drop-panel {
+    width: 100%; left: 0; right: 0; bottom: 0;
+    border-radius: 22px 22px 0 0;
+    border-bottom: none;
+  }
+  .dp-zone { padding: 1.4rem; margin: .8rem; }
+  .dp-zone-icon { font-size: 1.8rem; }
+  .dp-zone-text { font-size: .82rem; }
+
+  /* MODAL — full screen on mobile */
+  .modal-bg { padding: 0; align-items: flex-end; }
+  .modal {
+    max-width: 100%; width: 100%;
+    border-radius: 22px 22px 0 0;
+    max-height: 92vh;
+  }
+  .modal-head { padding: 1rem 1.2rem; }
+  .modal-title { font-size: .88rem; }
+  .modal-body { padding: 1rem; }
+  .modal-body img  { max-height: 55vh; }
+  .modal-body video{ max-height: 55vh; }
+  .modal-foot { padding: .8rem 1.2rem; gap: .6rem; flex-direction: column; }
+  .modal-btns { width: 100%; justify-content: flex-end; }
+  .mbtn { padding: 9px 16px; font-size: .8rem; }
+
+  /* EMPTY STATE */
+  .empty { padding: 3rem 1.5rem; }
+  .empty-icon { font-size: 3rem; }
+  .empty h3   { font-size: 1rem; }
+
+  /* BOTTOM NAV BAR for mobile category switching */
+  #mobile-nav {
+    display: flex !important;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--white);
+    border-top: 2px solid var(--border);
+    z-index: 150;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 20px rgba(0,0,0,.08);
+  }
+  .mn-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 3px;
+    padding: 6px 4px;
+    border: none; background: none; cursor: pointer;
+    border-radius: 10px; transition: background .15s;
+    font-family: var(--font);
+  }
+  .mn-item:active { background: var(--tg-light); }
+  .mn-item.active .mn-icon { color: var(--tg); }
+  .mn-item.active .mn-label { color: var(--tg); font-weight: 800; }
+  .mn-icon  { font-size: 1.3rem; }
+  .mn-label { font-size: .58rem; font-weight: 700; color: var(--muted); }
+
+  /* TOAST fix for mobile nav */
+  .toasts { bottom: 5rem; }
 }
+
+/* Larger phones / landscape */
+@media (min-width: 400px) and (max-width: 640px) {
+  .file-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Tablets */
+@media (min-width: 641px) and (max-width: 900px) {
+  .sidebar { width: 180px; }
+  .file-grid { grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); }
+  .topbar { padding: 0 1rem; }
+}
+
+/* Desktop default — mobile nav hidden */
+#mobile-nav { display: none; }
 </style>
 </head>
 <body>
@@ -911,6 +1041,25 @@ body {
     </div>
   </div>
 </div>
+
+<!-- Mobile Bottom Nav -->
+<nav id="mobile-nav" style="display:none;">
+  <button class="mn-item active" id="mn-all" onclick="mobileNav('all',this)">
+    <span class="mn-icon">🗂️</span><span class="mn-label">All</span>
+  </button>
+  <button class="mn-item" id="mn-image" onclick="mobileNav('image',this)">
+    <span class="mn-icon">🖼️</span><span class="mn-label">Photos</span>
+  </button>
+  <button class="mn-item" id="mn-video" onclick="mobileNav('video',this)">
+    <span class="mn-icon">🎬</span><span class="mn-label">Videos</span>
+  </button>
+  <button class="mn-item" id="mn-pdf" onclick="mobileNav('pdf',this)">
+    <span class="mn-icon">📄</span><span class="mn-label">PDFs</span>
+  </button>
+  <button class="mn-item" onclick="openDrop()">
+    <span class="mn-icon">⬆️</span><span class="mn-label">Upload</span>
+  </button>
+</nav>
 
 <input type="file" id="file-input" multiple onchange="onFilePick(this.files)">
 <div class="toasts" id="toasts"></div>
@@ -1322,6 +1471,25 @@ function toast(msg,type='info'){
   t.innerHTML=`${icons[type]||'ℹ'} ${msg}`;
   c.appendChild(t);
   setTimeout(()=>{t.style.opacity='0';t.style.transform='scale(.9)';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3000);
+}
+
+// ── MOBILE NAV ────────────────────────
+function mobileNav(cat, btn){
+  document.querySelectorAll('.mn-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // mirror to sidebar
+  const sideBtn=document.querySelector(`.sb-item[onclick*="'${cat}'"]`);
+  if(sideBtn) setCategory(cat, sideBtn);
+  else setCategory(cat, {classList:{add:()=>{},remove:()=>{}}});
+}
+
+// sync mobile nav active state when sidebar used
+const _origSetCat=setCategory;
+function setCategory(cat,btn){
+  _origSetCat(cat,btn);
+  document.querySelectorAll('.mn-item').forEach(b=>b.classList.remove('active'));
+  const mn=document.getElementById('mn-'+cat);
+  if(mn) mn.classList.add('active');
 }
 
 // ── KEYBOARD ──────────────────────────
