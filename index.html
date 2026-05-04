@@ -2,1170 +2,1405 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TeleStore — Your Free Cloud Storage</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TeleStore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════ */
 :root {
-  --bg: #f0f4ff;
-  --white: #ffffff;
-  --surface: #f8faff;
-  --border: #e2e8f8;
-  --tg: #2AABEE;
-  --tg-dark: #1a8bc9;
-  --tg-light: #e8f6fd;
-  --green: #22c55e;
-  --green-light: #dcfce7;
-  --red: #ef4444;
-  --red-light: #fee2e2;
-  --yellow: #f59e0b;
-  --yellow-light: #fef3c7;
-  --text: #1a1f36;
-  --muted: #64748b;
-  --light: #94a3b8;
-  --shadow: 0 4px 24px rgba(42,171,238,0.10);
-  --shadow-lg: 0 12px 48px rgba(42,171,238,0.18);
-  --radius: 16px;
-  --font: 'Nunito', sans-serif;
-  --mono: 'JetBrains Mono', monospace;
+  --c-bg:        #0c0e14;
+  --c-surface:   #13161f;
+  --c-surface2:  #1a1e2a;
+  --c-surface3:  #222738;
+  --c-border:    #2a2f42;
+  --c-border2:   #343a52;
+  --c-blue:      #3b82f6;
+  --c-blue-soft: rgba(59,130,246,.12);
+  --c-teal:      #06b6d4;
+  --c-teal-soft: rgba(6,182,212,.10);
+  --c-green:     #22c55e;
+  --c-green-soft:rgba(34,197,94,.12);
+  --c-red:       #ef4444;
+  --c-red-soft:  rgba(239,68,68,.12);
+  --c-amber:     #f59e0b;
+  --c-amber-soft:rgba(245,158,11,.12);
+  --c-purple:    #8b5cf6;
+  --c-pink:      #ec4899;
+  --c-text:      #f1f5f9;
+  --c-text2:     #94a3b8;
+  --c-text3:     #475569;
+  --grad-main:   linear-gradient(135deg,#3b82f6,#06b6d4);
+  --grad-hero:   linear-gradient(135deg,#1d4ed8,#0891b2);
+  --shadow-sm:   0 2px 8px rgba(0,0,0,.4);
+  --shadow-md:   0 8px 32px rgba(0,0,0,.5);
+  --shadow-lg:   0 24px 64px rgba(0,0,0,.6);
+  --r-sm:  8px;
+  --r-md:  12px;
+  --r-lg:  18px;
+  --r-xl:  24px;
+  --r-2xl: 32px;
+  --font:  'Inter', system-ui, sans-serif;
+  --mono:  'JetBrains Mono', monospace;
+  --ease:  cubic-bezier(.4,0,.2,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
+/* ═══════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════ */
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
 body {
   font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
+  background: var(--c-bg);
+  color: var(--c-text);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
+a { text-decoration:none; color:inherit; }
+button { cursor:pointer; font-family:var(--font); }
+input  { font-family:var(--font); }
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--c-border2); border-radius:4px; }
 
-/* ── WIZARD ───────────────────────────────────── */
-#wizard {
-  min-height: 100vh;
+/* ═══════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════ */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+@keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+@keyframes scaleIn  { from{opacity:0;transform:scale(.94)} to{opacity:1;transform:scale(1)} }
+@keyframes slideUp  { from{opacity:0;transform:translateY(24px) scale(.97)} to{opacity:1;transform:none} }
+@keyframes spin     { to{transform:rotate(360deg)} }
+@keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.5} }
+@keyframes shimmer  { from{background-position:-200% 0} to{background-position:200% 0} }
+
+/* ═══════════════════════════════════════
+   LANDING PAGE
+═══════════════════════════════════════ */
+#landing {
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
-  background: linear-gradient(160deg, #dbeafe 0%, #f0f4ff 40%, #ede9fe 100%);
-}
-
-.wiz-card {
-  background: var(--white);
-  border-radius: 28px;
-  box-shadow: var(--shadow-lg);
-  width: 100%;
-  max-width: 520px;
-  overflow: hidden;
-  animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both;
-}
-
-@keyframes popIn {
-  from { opacity:0; transform: scale(.92) translateY(20px); }
-  to   { opacity:1; transform: scale(1) translateY(0); }
-}
-
-/* progress bar */
-.wiz-progress {
-  height: 5px;
-  background: var(--border);
+  padding: 2rem 1.25rem;
   position: relative;
-}
-.wiz-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--tg), #7c3aed);
-  border-radius: 0 4px 4px 0;
-  transition: width .5s ease;
+  overflow: hidden;
 }
 
-/* step dots */
-.wiz-dots {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  padding: 1.2rem 0 0;
+/* background glow blobs */
+#landing::before,#landing::after {
+  content:'';
+  position:absolute;
+  border-radius:50%;
+  filter:blur(80px);
+  pointer-events:none;
+  z-index:0;
 }
-.dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--border);
-  transition: all .3s;
+#landing::before {
+  width:500px;height:500px;
+  background:radial-gradient(circle,rgba(59,130,246,.18) 0%,transparent 70%);
+  top:-100px;left:-100px;
 }
-.dot.active { background: var(--tg); transform: scale(1.3); }
-.dot.done   { background: var(--green); }
-
-/* step panels */
-.wiz-step { display: none; padding: 2rem 2.5rem 2.5rem; animation: fadeSlide .35s ease both; }
-.wiz-step.active { display: block; }
-@keyframes fadeSlide { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
-
-.step-emoji { font-size: 3rem; margin-bottom: 1rem; display: block; }
-.step-num {
-  font-size: .75rem; font-weight: 800; letter-spacing: .1em;
-  color: var(--tg); text-transform: uppercase; margin-bottom: .5rem;
-}
-.step-title { font-size: 1.5rem; font-weight: 900; margin-bottom: .5rem; line-height: 1.2; }
-.step-desc  { color: var(--muted); font-size: .95rem; line-height: 1.6; margin-bottom: 1.5rem; }
-
-/* instruction boxes */
-.instr {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.2rem 1.4rem;
-  margin-bottom: 1rem;
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-}
-.instr-num {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: var(--tg); color: #fff;
-  font-weight: 900; font-size: .8rem;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; margin-top: 1px;
-}
-.instr-text { font-size: .88rem; line-height: 1.6; color: var(--text); }
-.instr-text strong { color: var(--tg-dark); }
-.instr-text code {
-  background: var(--tg-light);
-  color: var(--tg-dark);
-  font-family: var(--mono);
-  font-size: .8rem;
-  padding: 2px 7px;
-  border-radius: 6px;
+#landing::after {
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(6,182,212,.15) 0%,transparent 70%);
+  bottom:-80px;right:-80px;
 }
 
-.open-tg-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, var(--tg), var(--tg-dark));
-  color: #fff;
-  font-family: var(--font);
-  font-weight: 800;
-  font-size: 1rem;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  text-decoration: none;
-  margin-bottom: 1rem;
-  transition: transform .15s, box-shadow .15s;
-  box-shadow: 0 4px 16px rgba(42,171,238,.3);
+.landing-inner {
+  position:relative;z-index:1;
+  width:100%;max-width:440px;
+  animation: fadeUp .6s var(--ease) both;
 }
-.open-tg-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(42,171,238,.4); }
 
-/* inputs */
-.field { margin-bottom: 1.2rem; }
-.field label {
-  display: block;
-  font-weight: 800;
-  font-size: .85rem;
-  margin-bottom: 6px;
-  color: var(--text);
+/* wordmark */
+.brand {
+  display:flex;align-items:center;gap:12px;
+  justify-content:center;
+  margin-bottom:2.5rem;
 }
-.field .hint { font-size: .78rem; color: var(--muted); margin-bottom: 8px; }
+.brand-icon {
+  width:48px;height:48px;
+  background:var(--grad-main);
+  border-radius:var(--r-md);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;
+  box-shadow:0 8px 24px rgba(59,130,246,.35);
+}
+.brand-name {
+  font-size:1.75rem;font-weight:800;
+  letter-spacing:-.04em;
+}
+.brand-name em { font-style:normal; color:var(--c-teal); }
 
-.inp {
-  width: 100%;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  padding: 13px 16px;
-  font-family: var(--mono);
-  font-size: .85rem;
-  color: var(--text);
-  background: var(--white);
-  outline: none;
-  transition: border-color .2s, box-shadow .2s;
+/* headline */
+.landing-headline {
+  text-align:center;
+  margin-bottom:2rem;
 }
-.inp:focus { border-color: var(--tg); box-shadow: 0 0 0 4px rgba(42,171,238,.12); }
-.inp.ok    { border-color: var(--green); background: var(--green-light); }
-.inp.err   { border-color: var(--red);   background: var(--red-light); }
+.landing-headline h1 {
+  font-size:clamp(1.6rem,5vw,2.2rem);
+  font-weight:800;
+  line-height:1.2;
+  letter-spacing:-.03em;
+  margin-bottom:.75rem;
+}
+.landing-headline h1 span {
+  background:var(--grad-main);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.landing-headline p {
+  font-size:.95rem;
+  color:var(--c-text2);
+  line-height:1.65;
+}
+
+/* privacy badge */
+.privacy-badge {
+  display:flex;align-items:flex-start;gap:10px;
+  background:rgba(34,197,94,.07);
+  border:1px solid rgba(34,197,94,.2);
+  border-radius:var(--r-md);
+  padding:12px 14px;
+  margin-bottom:1.5rem;
+  font-size:.82rem;
+  color:rgba(34,197,94,.9);
+  line-height:1.6;
+}
+.privacy-badge .pi { font-size:1.1rem; flex-shrink:0; margin-top:1px; }
+
+/* feature pills */
+.feature-pills {
+  display:flex;flex-wrap:wrap;gap:8px;
+  justify-content:center;
+  margin-bottom:2rem;
+}
+.pill {
+  display:flex;align-items:center;gap:6px;
+  background:var(--c-surface2);
+  border:1px solid var(--c-border);
+  border-radius:50px;
+  padding:6px 12px;
+  font-size:.78rem;
+  font-weight:600;
+  color:var(--c-text2);
+}
+.pill .dot { width:6px;height:6px;border-radius:50%;background:var(--c-teal); }
+
+/* CTA button */
+.btn-cta {
+  width:100%;
+  padding:16px;
+  background:var(--grad-main);
+  color:#fff;
+  font-size:1rem;
+  font-weight:700;
+  border:none;
+  border-radius:var(--r-lg);
+  transition:transform .15s var(--ease),box-shadow .15s;
+  box-shadow:0 8px 28px rgba(59,130,246,.35);
+}
+.btn-cta:hover { transform:translateY(-2px); box-shadow:0 12px 36px rgba(59,130,246,.45); }
+.btn-cta:active{ transform:translateY(0); }
+
+/* ═══════════════════════════════════════
+   SETUP WIZARD
+═══════════════════════════════════════ */
+#wizard {
+  display:none;
+  min-height:100dvh;
+  align-items:center;
+  justify-content:center;
+  padding:1.5rem 1.25rem;
+  position:relative;
+  overflow:hidden;
+}
+#wizard::before,#wizard::after {
+  content:'';position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;
+}
+#wizard::before { width:500px;height:500px;background:radial-gradient(circle,rgba(59,130,246,.15) 0%,transparent 70%);top:-100px;left:-100px; }
+#wizard::after  { width:400px;height:400px;background:radial-gradient(circle,rgba(6,182,212,.12) 0%,transparent 70%);bottom:-80px;right:-80px; }
+
+.wiz-shell {
+  position:relative;z-index:1;
+  width:100%;max-width:480px;
+  background:var(--c-surface);
+  border:1px solid var(--c-border);
+  border-radius:var(--r-2xl);
+  overflow:hidden;
+  box-shadow:var(--shadow-lg);
+  animation:scaleIn .4s var(--spring) both;
+}
+
+/* stepper bar */
+.wiz-bar {
+  display:flex;
+  padding:1.25rem 1.5rem;
+  gap:6px;
+  border-bottom:1px solid var(--c-border);
+  align-items:center;
+}
+.wiz-seg {
+  flex:1;height:3px;
+  background:var(--c-border2);
+  border-radius:4px;
+  overflow:hidden;
+  transition:background .3s;
+}
+.wiz-seg.done   { background:var(--c-green); }
+.wiz-seg.active { background:var(--c-blue); }
+.wiz-back {
+  background:none;border:none;color:var(--c-text3);
+  font-size:.82rem;font-weight:600;
+  padding:4px 8px;margin-right:4px;
+  border-radius:var(--r-sm);
+  transition:color .15s,background .15s;
+  display:none;
+}
+.wiz-back:hover { color:var(--c-text);background:var(--c-surface2); }
+.wiz-back.show  { display:block; }
+
+/* step content */
+.wiz-body { padding:2rem; }
+.wiz-step { display:none; animation:fadeUp .3s var(--ease) both; }
+.wiz-step.active { display:block; }
+
+.step-eyebrow {
+  font-size:.7rem;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--c-blue);margin-bottom:.6rem;
+}
+.step-title {
+  font-size:1.5rem;font-weight:800;
+  letter-spacing:-.03em;line-height:1.2;
+  margin-bottom:.6rem;
+}
+.step-sub {
+  font-size:.88rem;color:var(--c-text2);
+  line-height:1.65;margin-bottom:1.5rem;
+}
+
+/* instruction row */
+.instr-row {
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px;
+  background:var(--c-surface2);
+  border:1px solid var(--c-border);
+  border-radius:var(--r-md);
+  margin-bottom:.75rem;
+}
+.instr-row:last-of-type { margin-bottom:1.25rem; }
+.inr-num {
+  width:24px;height:24px;
+  border-radius:50%;
+  background:var(--grad-main);
+  color:#fff;font-size:.72rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.inr-text { font-size:.84rem;color:var(--c-text2);line-height:1.6; }
+.inr-text strong { color:var(--c-text); }
+.inr-text code {
+  background:var(--c-surface3);
+  color:var(--c-teal);
+  font-family:var(--mono);font-size:.78rem;
+  padding:1px 6px;border-radius:5px;
+}
+
+/* input field */
+.field { margin-bottom:1.25rem; }
+.field-label {
+  display:block;font-size:.8rem;font-weight:600;
+  color:var(--c-text2);margin-bottom:6px;
+  text-transform:uppercase;letter-spacing:.06em;
+}
+.field-hint { font-size:.75rem;color:var(--c-text3);margin-bottom:8px;line-height:1.5; }
+.finp {
+  width:100%;
+  background:var(--c-surface2);
+  border:1.5px solid var(--c-border);
+  color:var(--c-text);
+  font-family:var(--mono);font-size:.85rem;
+  padding:13px 14px;
+  border-radius:var(--r-md);
+  outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.finp:focus  { border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(59,130,246,.15); }
+.finp.v-ok   { border-color:var(--c-green);background:rgba(34,197,94,.06); }
+.finp.v-err  { border-color:var(--c-red);background:rgba(239,68,68,.06); }
 
 /* status banner */
-.status-box {
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  font-size: .85rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 1rem;
-  display: none;
+.s-banner {
+  display:none;align-items:center;gap:10px;
+  padding:11px 14px;border-radius:var(--r-md);
+  font-size:.83rem;font-weight:600;
+  margin-bottom:1rem;
 }
-.status-box.info    { background: var(--tg-light);    color: var(--tg-dark);  display:flex; }
-.status-box.success { background: var(--green-light); color: #15803d;         display:flex; }
-.status-box.error   { background: var(--red-light);   color: #b91c1c;         display:flex; }
-.status-box.loading { background: var(--yellow-light);color: #92400e;         display:flex; }
+.s-banner.show { display:flex; }
+.s-banner.info   { background:var(--c-blue-soft);color:var(--c-blue);border:1px solid rgba(59,130,246,.2); }
+.s-banner.ok     { background:var(--c-green-soft);color:var(--c-green);border:1px solid rgba(34,197,94,.2); }
+.s-banner.err    { background:var(--c-red-soft);color:var(--c-red);border:1px solid rgba(239,68,68,.2); }
+.s-banner.loading{ background:var(--c-amber-soft);color:var(--c-amber);border:1px solid rgba(245,158,11,.2); }
 
-/* primary button */
-.btn-primary {
-  width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, #2AABEE, #7c3aed);
-  color: #fff;
-  font-family: var(--font);
-  font-weight: 900;
-  font-size: 1.05rem;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: transform .15s, box-shadow .15s, opacity .15s;
-  box-shadow: 0 4px 20px rgba(124,58,237,.25);
-  margin-top: .5rem;
+/* tg link button */
+.btn-tg {
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;padding:14px;
+  background:var(--grad-main);color:#fff;
+  font-size:.95rem;font-weight:700;
+  border:none;border-radius:var(--r-md);
+  transition:transform .15s,box-shadow .15s;
+  box-shadow:0 6px 20px rgba(59,130,246,.3);
+  margin-bottom:1rem;
+  text-decoration:none;
 }
-.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,58,237,.35); }
-.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.btn-tg:hover { transform:translateY(-2px);box-shadow:0 10px 28px rgba(59,130,246,.4); }
+
+/* detect spinner */
+.detect-spin {
+  display:none;flex-direction:column;
+  align-items:center;gap:10px;padding:1.5rem 0;text-align:center;
+}
+.detect-spin.show { display:flex; }
+.ds-ring {
+  width:40px;height:40px;
+  border:3px solid var(--c-border);
+  border-top-color:var(--c-blue);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+.ds-label { font-size:.85rem;font-weight:600;color:var(--c-blue); }
+.ds-sub   { font-size:.75rem;color:var(--c-text3); }
+
+/* detected pill */
+.detected-pill {
+  display:none;align-items:center;gap:10px;
+  background:var(--c-green-soft);border:1px solid rgba(34,197,94,.25);
+  border-radius:var(--r-md);padding:12px 14px;margin-bottom:1rem;
+}
+.detected-pill.show { display:flex; }
+.dp-icon { font-size:1.4rem; }
+.dp-name { font-weight:700;font-size:.9rem;color:var(--c-green); }
+.dp-id   { font-size:.72rem;color:var(--c-text3);font-family:var(--mono); }
+
+/* primary btn */
+.btn-primary {
+  width:100%;padding:14px;
+  background:var(--grad-main);color:#fff;
+  font-size:.95rem;font-weight:700;
+  border:none;border-radius:var(--r-md);
+  transition:transform .15s,box-shadow .15s,opacity .15s;
+  box-shadow:0 6px 20px rgba(59,130,246,.3);
+  margin-top:.5rem;
+}
+.btn-primary:hover:not(:disabled) { transform:translateY(-2px);box-shadow:0 10px 28px rgba(59,130,246,.4); }
+.btn-primary:disabled { opacity:.4;cursor:not-allowed; }
 
 .btn-secondary {
-  width: 100%;
-  padding: 13px;
-  background: var(--white);
-  color: var(--muted);
-  font-family: var(--font);
-  font-weight: 700;
-  font-size: .9rem;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all .15s;
-  margin-top: .5rem;
+  width:100%;padding:12px;
+  background:transparent;color:var(--c-text3);
+  font-size:.88rem;font-weight:600;
+  border:1.5px solid var(--c-border);
+  border-radius:var(--r-md);
+  transition:all .15s;
+  margin-top:.5rem;
 }
-.btn-secondary:hover { border-color: var(--tg); color: var(--tg); }
+.btn-secondary:hover { border-color:var(--c-blue);color:var(--c-blue); }
 
-/* detected chat pill */
-.chat-pill {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  background: var(--green-light);
-  border: 2px solid var(--green);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  margin-bottom: 1rem;
+/* success step */
+.success-icon {
+  width:72px;height:72px;
+  background:var(--c-green-soft);border:2px solid rgba(34,197,94,.3);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;margin:0 auto 1.5rem;
 }
-.chat-pill.show { display: flex; }
-.chat-pill-icon { font-size: 1.4rem; }
-.chat-pill-info { flex: 1; }
-.chat-pill-name { font-weight: 800; font-size: .95rem; color: #15803d; }
-.chat-pill-id   { font-family: var(--mono); font-size: .75rem; color: var(--muted); }
 
-/* auto-detect spinner */
-.detecting-wrap {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  padding: 1.5rem 0;
-  gap: 12px;
-  text-align: center;
+/* ═══════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════ */
+#app {
+  display:none;
+  min-height:100dvh;
+  flex-direction:column;
 }
-.detecting-wrap.show { display: flex; }
-.detect-ring {
-  width: 48px; height: 48px;
-  border: 4px solid var(--border);
-  border-top-color: var(--tg);
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.detect-label { font-weight: 700; color: var(--tg); font-size: .9rem; }
-.detect-sub   { font-size: .8rem; color: var(--muted); }
 
-/* ── APP ──────────────────────────────────────── */
-#app { display: none; flex-direction: column; min-height: 100vh; }
-
-/* topbar */
+/* ─ TOPBAR ─ */
 .topbar {
-  background: var(--white);
-  border-bottom: 2px solid var(--border);
-  padding: 0 1.5rem;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  position: sticky; top: 0; z-index: 100;
-  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  height:60px;
+  background:var(--c-surface);
+  border-bottom:1px solid var(--c-border);
+  display:flex;align-items:center;
+  padding:0 1.25rem;gap:12px;
+  position:sticky;top:0;z-index:200;
+  backdrop-filter:blur(20px);
 }
-.app-logo { font-size: 1.3rem; font-weight: 900; flex-shrink: 0; }
-.app-logo span { color: var(--tg); }
-
-.topbar-search {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  background: var(--surface);
-  border: 2px solid var(--border);
-  border-radius: 50px;
-  padding: 0 16px;
-  gap: 8px;
-  transition: border-color .2s;
+.tb-brand {
+  display:flex;align-items:center;gap:10px;
+  flex-shrink:0;margin-right:4px;
 }
-.topbar-search:focus-within { border-color: var(--tg); }
-.topbar-search input {
-  flex: 1; border: none; background: none;
-  font-family: var(--font); font-size: .9rem; color: var(--text);
-  padding: 10px 0; outline: none;
+.tb-brand-icon {
+  width:32px;height:32px;
+  background:var(--grad-main);
+  border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;
 }
-.topbar-search .si { color: var(--light); }
-
-.topbar-right { display: flex; align-items: center; gap: 8px; }
-
-.up-btn {
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 20px;
-  background: var(--tg);
-  color: #fff;
-  font-family: var(--font); font-weight: 800; font-size: .9rem;
-  border: none; border-radius: 50px; cursor: pointer;
-  transition: transform .15s, box-shadow .15s;
-  box-shadow: 0 3px 12px rgba(42,171,238,.3);
+.tb-brand-name {
+  font-size:1.05rem;font-weight:800;letter-spacing:-.03em;
+  display:none;
 }
-.up-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(42,171,238,.4); }
+.tb-brand-name em { font-style:normal;color:var(--c-teal); }
 
-.icon-btn {
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
-  background: var(--white);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 1rem;
-  transition: border-color .15s, background .15s;
-  color: var(--muted);
+.tb-search {
+  flex:1;max-width:500px;
+  display:flex;align-items:center;gap:8px;
+  background:var(--c-surface2);
+  border:1.5px solid var(--c-border);
+  border-radius:50px;padding:0 14px;
+  transition:border-color .2s,box-shadow .2s;
 }
-.icon-btn:hover { border-color: var(--tg); background: var(--tg-light); color: var(--tg); }
-
-/* user pill */
-.user-pill {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 14px 6px 6px;
-  background: var(--tg-light);
-  border-radius: 50px;
-  font-size: .82rem; font-weight: 700; color: var(--tg-dark);
+.tb-search:focus-within {
+  border-color:var(--c-blue);
+  box-shadow:0 0 0 3px rgba(59,130,246,.12);
 }
-.user-avatar {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: var(--tg);
-  display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: .8rem; font-weight: 900;
+.tb-search svg { width:15px;height:15px;fill:var(--c-text3);flex-shrink:0; }
+.tb-search input {
+  flex:1;border:none;background:none;
+  color:var(--c-text);font-size:.88rem;
+  padding:9px 0;outline:none;
+}
+.tb-search input::placeholder { color:var(--c-text3); }
+
+.tb-right { display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0; }
+
+.tb-btn {
+  height:36px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  background:var(--c-surface2);
+  border:1.5px solid var(--c-border);
+  color:var(--c-text2);
+  font-size:.82rem;font-weight:600;
+  border-radius:50px;padding:0 14px;
+  transition:all .15s;
+}
+.tb-btn:hover { border-color:var(--c-blue);color:var(--c-blue);background:var(--c-blue-soft); }
+.tb-btn svg  { width:14px;height:14px;fill:currentColor; }
+
+.tb-upload {
+  height:36px;
+  display:flex;align-items:center;gap:7px;
+  background:var(--grad-main);color:#fff;
+  font-size:.85rem;font-weight:700;
+  border:none;border-radius:50px;padding:0 16px;
+  box-shadow:0 4px 14px rgba(59,130,246,.3);
+  transition:transform .15s,box-shadow .15s;
+  white-space:nowrap;
+}
+.tb-upload:hover { transform:translateY(-1px);box-shadow:0 6px 20px rgba(59,130,246,.4); }
+.tb-upload svg { width:14px;height:14px;fill:currentColor; }
+
+.tb-avatar {
+  width:36px;height:36px;border-radius:50%;
+  background:var(--grad-main);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;font-weight:800;color:#fff;
+  cursor:pointer;flex-shrink:0;
+  transition:transform .15s,box-shadow .15s;
+}
+.tb-avatar:hover { transform:scale(1.06);box-shadow:0 4px 14px rgba(59,130,246,.4); }
+
+/* ─ LAYOUT ─ */
+.app-body {
+  display:flex;flex:1;
+  height:calc(100dvh - 60px);
+  overflow:hidden;
 }
 
-/* app body */
-.app-body { display: flex; flex: 1; height: calc(100vh - 64px); }
-
-/* sidebar */
+/* ─ SIDEBAR ─ */
 .sidebar {
-  width: 230px; flex-shrink: 0;
-  background: var(--white);
-  border-right: 2px solid var(--border);
-  padding: 1.5rem 1rem;
-  display: flex; flex-direction: column; gap: 4px;
-  overflow-y: auto;
+  width:220px;flex-shrink:0;
+  background:var(--c-surface);
+  border-right:1px solid var(--c-border);
+  overflow-y:auto;
+  padding:1rem .75rem 2rem;
+  display:flex;flex-direction:column;
+  gap:2px;
 }
-
-.sb-label {
-  font-size: .7rem; font-weight: 800; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--light);
-  padding: 12px 10px 6px;
+.sb-section {
+  font-size:.65rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;
+  color:var(--c-text3);padding:12px 10px 6px;
 }
-
 .sb-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 700; font-size: .88rem;
-  color: var(--muted);
-  border: none; background: none; width: 100%; text-align: left;
-  transition: all .15s;
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:var(--r-sm);
+  font-size:.85rem;font-weight:600;color:var(--c-text2);
+  border:none;background:none;width:100%;text-align:left;
+  transition:all .15s;position:relative;
 }
-.sb-item:hover  { background: var(--surface); color: var(--text); }
-.sb-item.active { background: var(--tg-light); color: var(--tg); }
-.sb-item .emoji { font-size: 1.1rem; width: 22px; text-align: center; }
-
+.sb-item:hover  { background:var(--c-surface2);color:var(--c-text); }
+.sb-item.active { background:var(--c-blue-soft);color:var(--c-blue); }
+.sb-item .si    { font-size:1rem;width:20px;text-align:center;flex-shrink:0; }
 .sb-count {
-  margin-left: auto;
-  background: var(--border);
-  color: var(--muted);
-  font-size: .68rem; font-weight: 800;
-  padding: 2px 8px; border-radius: 50px;
+  margin-left:auto;
+  background:var(--c-surface3);color:var(--c-text3);
+  font-size:.65rem;font-weight:700;
+  padding:2px 7px;border-radius:50px;
+  transition:all .15s;
 }
-.sb-item.active .sb-count { background: var(--tg); color: #fff; }
+.sb-item.active .sb-count { background:rgba(59,130,246,.2);color:var(--c-blue); }
 
-.sb-spacer { flex: 1; }
-
-.sb-user {
-  background: var(--tg-light);
-  border-radius: 14px;
-  padding: 12px 14px;
-  margin-top: 1rem;
+.sb-footer {
+  margin-top:auto;padding-top:1.5rem;
 }
-.sb-user-name { font-weight: 800; font-size: .88rem; color: var(--tg-dark); margin-bottom: 2px; }
-.sb-user-info { font-size: .73rem; color: var(--muted); }
-.sb-disconnect {
-  margin-top: 8px;
-  font-size: .75rem; font-weight: 700;
-  color: var(--red); cursor: pointer;
-  background: none; border: none; padding: 0;
-  font-family: var(--font);
+.sb-user-card {
+  background:var(--c-surface2);
+  border:1px solid var(--c-border);
+  border-radius:var(--r-md);padding:12px;
 }
-.sb-disconnect:hover { text-decoration: underline; }
-
-/* main */
-.main { flex: 1; overflow-y: auto; padding: 1.5rem; }
-
-/* category header */
-.cat-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 1.2rem; flex-wrap: wrap; gap: .75rem;
+.suc-name { font-weight:700;font-size:.88rem;margin-bottom:2px; }
+.suc-bot  { font-size:.72rem;color:var(--c-text3);font-family:var(--mono);margin-bottom:10px; }
+.suc-stats{ font-size:.72rem;color:var(--c-text3);margin-bottom:10px; }
+.suc-btns { display:flex;gap:6px; }
+.suc-btn  {
+  flex:1;padding:7px;border-radius:var(--r-sm);
+  font-size:.72rem;font-weight:700;
+  border:1.5px solid var(--c-border);
+  background:none;color:var(--c-text3);
+  transition:all .15s;
 }
-.cat-title { font-size: 1.3rem; font-weight: 900; }
-.cat-sub   { font-size: .82rem; color: var(--muted); margin-top: 2px; }
-.view-toggle { display: flex; gap: 4px; }
-.vbtn {
-  width: 36px; height: 36px; border-radius: 10px;
-  border: 2px solid var(--border); background: var(--white);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 1rem;
-  transition: all .15s; color: var(--muted);
+.suc-btn:hover { border-color:var(--c-blue);color:var(--c-blue); }
+.suc-btn.danger:hover { border-color:var(--c-red);color:var(--c-red); }
+
+/* ─ MAIN ─ */
+.main {
+  flex:1;overflow-y:auto;
+  padding:1.5rem;
+  padding-bottom:calc(1.5rem + env(safe-area-inset-bottom));
 }
-.vbtn.active { border-color: var(--tg); background: var(--tg-light); color: var(--tg); }
 
-/* file grid */
-.file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 1rem; }
+.main-header {
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;
+}
+.main-title { font-size:1.2rem;font-weight:800;letter-spacing:-.02em; }
+.main-sub   { font-size:.78rem;color:var(--c-text3);margin-top:2px; }
 
+.view-toggle { display:flex;gap:4px; }
+.vtbtn {
+  width:34px;height:34px;border-radius:var(--r-sm);
+  border:1.5px solid var(--c-border);
+  background:var(--c-surface2);color:var(--c-text3);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.vtbtn svg { width:15px;height:15px;fill:currentColor; }
+.vtbtn:hover  { border-color:var(--c-blue);color:var(--c-blue); }
+.vtbtn.active { background:var(--c-blue-soft);border-color:var(--c-blue);color:var(--c-blue); }
+
+/* ─ FILE GRID ─ */
+.file-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:1rem;
+}
 .file-card {
-  background: var(--white);
-  border: 2px solid var(--border);
-  border-radius: 18px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform .2s, border-color .2s, box-shadow .2s;
-  position: relative;
+  background:var(--c-surface);
+  border:1px solid var(--c-border);
+  border-radius:var(--r-lg);
+  overflow:hidden;cursor:pointer;
+  transition:transform .2s var(--ease),border-color .2s,box-shadow .2s;
+  position:relative;
+  group:true;
 }
 .file-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--tg);
-  box-shadow: var(--shadow-lg);
+  transform:translateY(-3px);
+  border-color:var(--c-blue);
+  box-shadow:0 12px 32px rgba(0,0,0,.4),0 0 0 1px rgba(59,130,246,.15);
 }
-
 .fc-thumb {
-  aspect-ratio: 1;
-  background: var(--surface);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 2.8rem;
-  position: relative; overflow: hidden;
+  aspect-ratio:1;
+  background:var(--c-surface2);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
 }
-.fc-thumb img, .fc-thumb video {
-  width: 100%; height: 100%;
-  object-fit: cover; position: absolute; inset: 0;
+.fc-thumb img,.fc-thumb video {
+  width:100%;height:100%;object-fit:cover;
+  position:absolute;inset:0;
 }
-.fc-thumb .fc-icon { position: relative; z-index: 1; }
-
-.fc-body { padding: 10px 12px; border-top: 2px solid var(--border); }
+.fc-type-icon {
+  font-size:2.4rem;position:relative;z-index:1;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,.3));
+}
+.fc-overlay {
+  position:absolute;inset:0;
+  background:rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  opacity:0;transition:opacity .2s;z-index:2;
+}
+.file-card:hover .fc-overlay { opacity:1; }
+.fc-ov-btn {
+  width:34px;height:34px;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;backdrop-filter:blur(4px);
+  transition:background .15s,transform .15s;
+  font-size:.85rem;
+}
+.fc-ov-btn:hover { background:rgba(255,255,255,.28);transform:scale(1.08); }
+.fc-ov-btn.del:hover { background:rgba(239,68,68,.4); }
+.fc-body { padding:10px 12px;border-top:1px solid var(--c-border); }
 .fc-name {
-  font-weight: 800; font-size: .78rem;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  margin-bottom: 3px;
+  font-size:.8rem;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-bottom:3px;
 }
-.fc-meta { font-size: .68rem; color: var(--muted); font-weight: 600; }
+.fc-meta { font-size:.68rem;color:var(--c-text3);font-family:var(--mono); }
 
-.fc-actions {
-  position: absolute; top: 8px; right: 8px;
-  display: flex; gap: 4px; opacity: 0;
-  transition: opacity .2s;
+/* chunk badge */
+.chunk-badge {
+  position:absolute;top:7px;left:7px;z-index:3;
+  background:rgba(59,130,246,.85);color:#fff;
+  font-size:.6rem;font-weight:800;
+  padding:2px 6px;border-radius:4px;backdrop-filter:blur(4px);
 }
-.file-card:hover .fc-actions { opacity: 1; }
-.fca {
-  width: 30px; height: 30px;
-  background: rgba(255,255,255,.92);
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: .8rem;
-  transition: all .15s; backdrop-filter: blur(4px);
-  color: var(--text);
-}
-.fca:hover { background: var(--tg-light); border-color: var(--tg); }
-.fca.del:hover { background: var(--red-light); border-color: var(--red); }
 
-/* file list */
-.file-list { display: flex; flex-direction: column; gap: 6px; }
+/* ─ FILE LIST ─ */
+.file-list { display:flex;flex-direction:column;gap:4px; }
 .file-row {
-  display: flex; align-items: center; gap: 14px;
-  padding: 12px 16px;
-  background: var(--white);
-  border: 2px solid transparent;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: all .15s;
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;
+  background:var(--c-surface);
+  border:1px solid transparent;
+  border-radius:var(--r-md);
+  cursor:pointer;transition:all .15s;
 }
-.file-row:hover { border-color: var(--tg); box-shadow: var(--shadow); }
-.fr-icon { font-size: 1.6rem; width: 36px; text-align: center; flex-shrink: 0; }
-.fr-name { flex: 1; font-weight: 800; font-size: .88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.fr-meta { font-size: .75rem; color: var(--muted); font-weight: 600; display: flex; gap: 1.5rem; flex-shrink: 0; }
-.fr-actions { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
-.file-row:hover .fr-actions { opacity: 1; }
+.file-row:hover { background:var(--c-surface2);border-color:var(--c-border); }
+.fr-icon { font-size:1.5rem;width:32px;text-align:center;flex-shrink:0; }
+.fr-name { flex:1;font-size:.86rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.fr-meta { font-family:var(--mono);font-size:.72rem;color:var(--c-text3);display:flex;gap:1.5rem;flex-shrink:0; }
+.fr-acts { display:flex;gap:4px;opacity:0;transition:opacity .15s; }
+.file-row:hover .fr-acts { opacity:1; }
+.fr-btn {
+  width:28px;height:28px;border-radius:var(--r-sm);
+  border:1px solid var(--c-border);background:var(--c-surface2);
+  color:var(--c-text3);font-size:.8rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.fr-btn:hover    { border-color:var(--c-blue);color:var(--c-blue); }
+.fr-btn.del:hover{ border-color:var(--c-red);color:var(--c-red); }
 
-/* type colors */
-.c-img  { color: #16a34a; }
-.c-vid  { color: #db2777; }
-.c-pdf  { color: #dc2626; }
-.c-doc  { color: #2563eb; }
-.c-zip  { color: #d97706; }
-.c-aud  { color: #7c3aed; }
-.c-oth  { color: var(--muted); }
-
-/* empty */
+/* ─ EMPTY STATE ─ */
 .empty {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; padding: 5rem 2rem; text-align: center;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:5rem 2rem;text-align:center;
 }
-.empty-icon { font-size: 4rem; margin-bottom: 1rem; opacity: .5; }
-.empty h3 { font-size: 1.2rem; font-weight: 900; margin-bottom: .5rem; }
-.empty p  { color: var(--muted); font-size: .88rem; }
+.empty-ico { font-size:3.5rem;margin-bottom:1rem;opacity:.4; }
+.empty h3  { font-size:1.1rem;font-weight:700;margin-bottom:.5rem; }
+.empty p   { font-size:.85rem;color:var(--c-text3); }
 
-/* upload drop panel */
-.drop-panel {
-  position: fixed; bottom: 1.5rem; right: 1.5rem;
-  width: 340px;
-  background: var(--white);
-  border: 2px solid var(--border);
-  border-radius: 22px;
-  box-shadow: var(--shadow-lg);
-  z-index: 200; overflow: hidden;
-  display: none;
-  animation: slideUp .3s cubic-bezier(.34,1.56,.64,1);
+/* ─ SPINNER ─ */
+.spin-center { display:flex;align-items:center;justify-content:center;padding:4rem; }
+.spinner {
+  width:32px;height:32px;
+  border:3px solid var(--c-border);
+  border-top-color:var(--c-blue);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
 }
-@keyframes slideUp { from { opacity:0; transform: translateY(20px) scale(.95); } to { opacity:1; transform: none; } }
-.dp-head {
-  padding: 1rem 1.2rem;
-  border-bottom: 2px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  font-weight: 900; font-size: .95rem;
-}
-.dp-close {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: var(--surface); border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: .9rem; color: var(--muted);
-  transition: all .15s;
-}
-.dp-close:hover { background: var(--red-light); color: var(--red); }
-.dp-zone {
-  margin: 1rem;
-  border: 2.5px dashed var(--border);
-  border-radius: var(--radius);
-  padding: 1.8rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all .2s;
-}
-.dp-zone:hover, .dp-zone.drag { border-color: var(--tg); background: var(--tg-light); }
-.dp-zone-icon { font-size: 2.2rem; margin-bottom: .5rem; }
-.dp-zone-text { font-weight: 700; font-size: .85rem; color: var(--muted); }
-.dp-zone-sub  { font-size: .73rem; color: var(--light); margin-top: 4px; }
-.dp-list { padding: 0 1rem 1rem; display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; }
-.dp-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; background: var(--surface); border-radius: 10px;
-}
-.dp-item-name { flex: 1; font-size: .78rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dp-bar { height: 4px; background: var(--border); border-radius: 4px; margin-top: 3px; overflow: hidden; }
-.dp-fill { height: 100%; background: linear-gradient(90deg, var(--tg), var(--green)); border-radius: 4px; transition: width .3s; }
-.dp-status { font-size: .68rem; color: var(--muted); font-weight: 700; flex-shrink: 0; }
 
-/* modal */
-.modal-bg {
-  position: fixed; inset: 0;
-  background: rgba(15,20,40,.75);
-  backdrop-filter: blur(10px);
-  z-index: 999; display: flex; align-items: center; justify-content: center;
-  padding: 1.5rem;
-  animation: fadeIn .2s ease;
+/* ═══════════════════════════════════════
+   UPLOAD PANEL (bottom sheet)
+═══════════════════════════════════════ */
+.upload-sheet {
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--c-surface);
+  border-top:1px solid var(--c-border);
+  border-radius:var(--r-xl) var(--r-xl) 0 0;
+  z-index:400;
+  transform:translateY(100%);
+  transition:transform .35s var(--spring);
+  box-shadow:0 -20px 60px rgba(0,0,0,.5);
+  max-height:80dvh;
+  display:flex;flex-direction:column;
 }
-@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+.upload-sheet.open { transform:translateY(0); }
+
+.us-handle {
+  width:36px;height:4px;
+  background:var(--c-border2);border-radius:4px;
+  margin:12px auto 0;flex-shrink:0;
+}
+.us-head {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 1.25rem .75rem;flex-shrink:0;
+}
+.us-title { font-size:1rem;font-weight:800;letter-spacing:-.02em; }
+.us-close {
+  width:30px;height:30px;border-radius:50%;
+  background:var(--c-surface2);border:1px solid var(--c-border);
+  color:var(--c-text3);font-size:.9rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.us-close:hover { background:var(--c-red-soft);color:var(--c-red);border-color:rgba(239,68,68,.3); }
+
+.us-drop {
+  margin:0 1.25rem;
+  border:2px dashed var(--c-border2);
+  border-radius:var(--r-lg);
+  padding:2rem;text-align:center;
+  cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.us-drop:hover,.us-drop.drag { border-color:var(--c-blue);background:var(--c-blue-soft); }
+.us-drop-icon { font-size:2rem;margin-bottom:.6rem;opacity:.7; }
+.us-drop-text { font-size:.88rem;font-weight:600;color:var(--c-text2); }
+.us-drop-sub  { font-size:.75rem;color:var(--c-text3);margin-top:4px; }
+
+.us-list {
+  padding:.75rem 1.25rem 1.25rem;
+  overflow-y:auto;flex:1;
+  display:flex;flex-direction:column;gap:8px;
+}
+
+.up-item {
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  background:var(--c-surface2);border:1px solid var(--c-border);
+  border-radius:var(--r-md);
+}
+.up-item-icon { font-size:1.2rem;flex-shrink:0; }
+.up-item-info { flex:1;min-width:0; }
+.up-item-name { font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.up-item-sub  { font-size:.68rem;color:var(--c-text3);margin-top:2px; }
+.up-pbar      { height:3px;background:var(--c-border);border-radius:3px;margin-top:5px;overflow:hidden; }
+.up-pfill     { height:100%;background:var(--grad-main);border-radius:3px;transition:width .3s; }
+.up-status    { font-size:.7rem;font-weight:700;color:var(--c-text3);flex-shrink:0; }
+
+/* ═══════════════════════════════════════
+   VIEWER MODAL
+═══════════════════════════════════════ */
+.modal-wrap {
+  display:none;
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.85);
+  backdrop-filter:blur(16px);
+  align-items:center;justify-content:center;
+  padding:1rem;
+  animation:fadeIn .2s var(--ease);
+}
+.modal-wrap.open { display:flex; }
 .modal {
-  background: var(--white);
-  border-radius: 24px;
-  width: 100%; max-width: 860px;
-  max-height: 90vh;
-  display: flex; flex-direction: column;
-  box-shadow: 0 32px 80px rgba(0,0,0,.3);
-  animation: popIn .25s cubic-bezier(.34,1.56,.64,1) both;
-  overflow: hidden;
+  background:var(--c-surface);
+  border:1px solid var(--c-border);
+  border-radius:var(--r-xl);
+  width:100%;max-width:900px;
+  max-height:92dvh;
+  display:flex;flex-direction:column;
+  box-shadow:var(--shadow-lg);
+  animation:scaleIn .25s var(--spring);
+  overflow:hidden;
 }
 .modal-head {
-  padding: 1.2rem 1.5rem;
-  border-bottom: 2px solid var(--border);
-  display: flex; align-items: center; gap: 12px;
+  display:flex;align-items:center;gap:10px;
+  padding:1rem 1.25rem;
+  border-bottom:1px solid var(--c-border);
+  flex-shrink:0;
 }
-.modal-title { flex: 1; font-weight: 900; font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.modal-close {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: var(--surface); border: 2px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 1rem; color: var(--muted); transition: all .15s;
+.modal-title {
+  flex:1;font-size:.9rem;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.modal-close:hover { background: var(--red-light); border-color: var(--red); color: var(--red); }
+.modal-acts { display:flex;gap:6px; }
+.m-btn {
+  height:32px;padding:0 12px;border-radius:var(--r-sm);
+  font-size:.78rem;font-weight:700;
+  border:1.5px solid var(--c-border);
+  background:var(--c-surface2);color:var(--c-text2);
+  display:flex;align-items:center;gap:5px;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.m-btn:hover { border-color:var(--c-blue);color:var(--c-blue); }
+.m-btn svg   { width:12px;height:12px;fill:currentColor; }
+.m-btn-close {
+  width:32px;height:32px;border-radius:50%;
+  border:1.5px solid var(--c-border);
+  background:var(--c-surface2);color:var(--c-text3);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.m-btn-close:hover { background:var(--c-red-soft);border-color:rgba(239,68,68,.3);color:var(--c-red); }
+.m-btn-close svg { width:14px;height:14px;fill:currentColor; }
+
 .modal-body {
-  flex: 1; overflow: auto;
-  display: flex; align-items: center; justify-content: center;
-  padding: 1.5rem; background: #f8fafc;
-  min-height: 200px;
+  flex:1;overflow:auto;
+  display:flex;align-items:center;justify-content:center;
+  padding:1.25rem;background:var(--c-bg);min-height:200px;
 }
-.modal-body img  { max-width: 100%; max-height: 70vh; border-radius: 12px; object-fit: contain; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
-.modal-body video { max-width: 100%; max-height: 70vh; border-radius: 12px; outline: none; }
+.modal-body img  { max-width:100%;max-height:72vh;border-radius:var(--r-md);object-fit:contain; }
+.modal-body video { max-width:100%;max-height:72vh;border-radius:var(--r-md);outline:none;background:#000; }
+.modal-body audio { width:100%;max-width:420px;outline:none; }
+
 .modal-foot {
-  padding: 1rem 1.5rem;
-  border-top: 2px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-  flex-wrap: wrap;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.875rem 1.25rem;
+  border-top:1px solid var(--c-border);
+  gap:1rem;flex-wrap:wrap;flex-shrink:0;
 }
-.modal-meta { font-size: .78rem; color: var(--muted); font-weight: 600; }
-.modal-btns { display: flex; gap: 8px; }
+.modal-meta { font-size:.75rem;color:var(--c-text3);font-family:var(--mono); }
+.modal-foot-btns { display:flex;gap:6px; }
 
-.mbtn {
-  padding: 9px 20px;
-  border-radius: 50px;
-  font-family: var(--font); font-weight: 800; font-size: .83rem;
-  cursor: pointer; border: none; transition: all .15s;
+/* ═══════════════════════════════════════
+   OVERLAY (sync progress, etc.)
+═══════════════════════════════════════ */
+.overlay {
+  position:fixed;inset:0;z-index:600;
+  background:rgba(0,0,0,.8);backdrop-filter:blur(12px);
+  display:flex;align-items:center;justify-content:center;
+  padding:1.5rem;animation:fadeIn .2s;
 }
-.mbtn-primary { background: var(--tg); color: #fff; }
-.mbtn-primary:hover { background: var(--tg-dark); }
-.mbtn-ghost { background: var(--surface); color: var(--muted); border: 2px solid var(--border); }
-.mbtn-ghost:hover { border-color: var(--tg); color: var(--tg); }
+.overlay-card {
+  background:var(--c-surface);
+  border:1px solid var(--c-border);
+  border-radius:var(--r-xl);
+  padding:2rem;
+  max-width:360px;width:100%;
+  text-align:center;
+  box-shadow:var(--shadow-lg);
+  animation:scaleIn .25s var(--spring);
+}
+.ov-icon  { font-size:2.5rem;margin-bottom:1rem; }
+.ov-title { font-size:1.1rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.4rem; }
+.ov-sub   { font-size:.83rem;color:var(--c-text3);margin-bottom:1.25rem; }
+.ov-bar   { height:6px;background:var(--c-surface3);border-radius:6px;overflow:hidden;margin-bottom:.75rem; }
+.ov-fill  { height:100%;background:var(--grad-main);border-radius:6px;transition:width .4s var(--ease); }
+.ov-count { font-size:.75rem;color:var(--c-text3);font-weight:600; }
 
-/* toast */
+/* ═══════════════════════════════════════
+   ACCOUNT MENU
+═══════════════════════════════════════ */
+.acct-menu {
+  position:fixed;top:68px;right:14px;z-index:300;
+  background:var(--c-surface);
+  border:1px solid var(--c-border);
+  border-radius:var(--r-lg);
+  padding:6px;min-width:210px;
+  box-shadow:var(--shadow-md);
+  animation:scaleIn .2s var(--spring);
+  transform-origin:top right;
+}
+.am-header {
+  padding:10px 12px 8px;
+  border-bottom:1px solid var(--c-border);margin-bottom:4px;
+}
+.am-name { font-weight:700;font-size:.88rem; }
+.am-bot  { font-size:.72rem;color:var(--c-text3);font-family:var(--mono);margin-top:1px; }
+.am-item {
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:var(--r-sm);
+  font-size:.83rem;font-weight:600;color:var(--c-text2);
+  border:none;background:none;width:100%;
+  transition:all .15s;cursor:pointer;
+}
+.am-item:hover     { background:var(--c-surface2);color:var(--c-text); }
+.am-item.danger    { color:var(--c-red); }
+.am-item.danger:hover { background:var(--c-red-soft); }
+.am-sep { height:1px;background:var(--c-border);margin:4px 0; }
+
+/* ═══════════════════════════════════════
+   MOBILE BOTTOM NAV
+═══════════════════════════════════════ */
+#mob-nav {
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:var(--c-surface);
+  border-top:1px solid var(--c-border);
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+  backdrop-filter:blur(20px);
+}
+.mn-item {
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;gap:3px;
+  padding:6px 4px;
+  border:none;background:none;cursor:pointer;
+  border-radius:var(--r-sm);transition:background .15s;
+}
+.mn-item:active { background:var(--c-surface2); }
+.mn-ico   { font-size:1.25rem; }
+.mn-lbl   { font-size:.58rem;font-weight:700;color:var(--c-text3); }
+.mn-item.active .mn-ico ~ .mn-lbl,
+.mn-item.active .mn-lbl { color:var(--c-blue); }
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
 .toasts {
-  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-  z-index: 9999; display: flex; flex-direction: column; gap: 8px;
-  pointer-events: none; align-items: center;
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);
+  z-index:9999;display:flex;flex-direction:column;
+  align-items:center;gap:8px;pointer-events:none;
 }
 .toast {
-  padding: 11px 20px;
-  border-radius: 50px;
-  font-weight: 700; font-size: .85rem;
-  display: flex; align-items: center; gap: 8px;
-  box-shadow: 0 6px 24px rgba(0,0,0,.12);
-  animation: toastPop .3s cubic-bezier(.34,1.56,.64,1);
-  white-space: nowrap;
+  padding:10px 18px;border-radius:50px;
+  font-size:.83rem;font-weight:700;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:var(--shadow-md);
+  white-space:nowrap;backdrop-filter:blur(8px);
+  animation:slideUp .3s var(--spring);
 }
-@keyframes toastPop { from { opacity:0; transform: translateY(8px) scale(.9); } to { opacity:1; transform: none; } }
-.toast.ok   { background: var(--green); color: #fff; }
-.toast.err  { background: var(--red);   color: #fff; }
-.toast.info { background: var(--tg);    color: #fff; }
-.toast.warn { background: var(--yellow); color: #fff; }
+.toast.ok   { background:var(--c-green);color:#fff; }
+.toast.err  { background:var(--c-red);color:#fff; }
+.toast.info { background:var(--c-blue);color:#fff; }
+.toast.warn { background:var(--c-amber);color:#fff; }
 
-/* spinner */
-.spin { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--tg); border-radius: 50%; animation: spin .7s linear infinite; margin: 3rem auto; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* ═══════════════════════════════════════
+   TYPE COLORS
+═══════════════════════════════════════ */
+.t-img { color:#4ade80; }
+.t-vid { color:#f472b6; }
+.t-pdf { color:#f87171; }
+.t-doc { color:#60a5fa; }
+.t-zip { color:#fbbf24; }
+.t-aud { color:#a78bfa; }
+.t-oth { color:var(--c-text3); }
 
-#file-input { display: none; }
-
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
-
-/* ── MOBILE RESPONSIVE ───────────────────────────── */
-@media (max-width: 640px) {
-
-  /* WIZARD */
-  #wizard { padding: .75rem .75rem 1.5rem; justify-content: flex-start; padding-top: 1.5rem; }
-  .wiz-card { border-radius: 20px; max-width: 100%; }
-  .wiz-step { padding: 1.2rem 1.2rem 1.5rem; }
-  .step-emoji { font-size: 2.2rem; margin-bottom: .6rem; }
-  .step-title { font-size: 1.2rem; }
-  .step-desc  { font-size: .85rem; margin-bottom: 1rem; }
-  .instr { padding: .9rem 1rem; gap: 10px; margin-bottom: .7rem; }
-  .instr-num { width: 24px; height: 24px; font-size: .72rem; flex-shrink: 0; }
-  .instr-text { font-size: .8rem; }
-  .open-tg-btn { padding: 12px; font-size: .88rem; }
-  .btn-primary { padding: 13px; font-size: .92rem; }
-  .btn-secondary { padding: 11px; font-size: .85rem; }
-  .inp { font-size: .8rem; padding: 11px 13px; }
-  .field label { font-size: .82rem; }
-  .field .hint { font-size: .72rem; }
-
-  /* Privacy box on welcome step */
-  #s0 > div[style] { padding: 11px 13px !important; }
-  #s0 > div[style] div:first-child { font-size: .82rem !important; }
-  #s0 > div[style] div:last-child  { font-size: .76rem !important; }
-
-  /* APP TOPBAR */
-  .topbar { padding: 0 .8rem; height: 56px; gap: .6rem; }
-  .app-logo { font-size: 1.1rem; }
-  .topbar-search { flex: 1; min-width: 0; padding: 0 10px; }
-  .topbar-search input { font-size: .82rem; padding: 8px 0; }
-  .user-pill { display: none; }          /* hide on small screens */
-  .up-btn { padding: 8px 14px; font-size: .8rem; gap: 5px; white-space: nowrap; }
-  .icon-btn { width: 34px; height: 34px; font-size: .88rem; }
-
-  /* APP BODY — hide sidebar, full width main */
-  .app-body { height: calc(100vh - 56px); }
-  .sidebar { display: none; }
-  .main { padding: .9rem .9rem 5rem; }   /* bottom pad for mobile nav */
-
-  /* CAT HEADER */
-  .cat-header { margin-bottom: .8rem; gap: .5rem; }
-  .cat-title { font-size: 1.1rem; }
-  .cat-sub   { font-size: .75rem; }
-  .vbtn { width: 32px; height: 32px; font-size: .88rem; }
-
-  /* FILE GRID — 2 columns on phone */
-  .file-grid { grid-template-columns: repeat(2, 1fr); gap: .7rem; }
-  .fc-thumb { font-size: 2.2rem; }
-  .fc-name  { font-size: .72rem; }
-  .fc-meta  { font-size: .62rem; }
-  .fc-body  { padding: 8px 10px; }
-
-  /* FILE CARD ACTIONS — always visible on mobile (no hover) */
-  .fc-actions { opacity: 1; top: 6px; right: 6px; }
-  .fca { width: 26px; height: 26px; font-size: .7rem; }
-
-  /* FILE LIST */
-  .file-row { padding: 10px 12px; gap: 10px; border-radius: 12px; }
-  .fr-icon  { font-size: 1.3rem; width: 28px; }
-  .fr-name  { font-size: .82rem; }
-  .fr-meta  { display: none; }           /* hide size/date on list in mobile */
-  .fr-actions { opacity: 1; }            /* always show on mobile */
-
-  /* UPLOAD PANEL — full width bottom sheet */
-  .drop-panel {
-    width: 100%; left: 0; right: 0; bottom: 0;
-    border-radius: 22px 22px 0 0;
-    border-bottom: none;
-  }
-  .dp-zone { padding: 1.4rem; margin: .8rem; }
-  .dp-zone-icon { font-size: 1.8rem; }
-  .dp-zone-text { font-size: .82rem; }
-
-  /* MODAL — full screen on mobile */
-  .modal-bg { padding: 0; align-items: flex-end; }
-  .modal {
-    max-width: 100%; width: 100%;
-    border-radius: 22px 22px 0 0;
-    max-height: 92vh;
-  }
-  .modal-head { padding: 1rem 1.2rem; }
-  .modal-title { font-size: .88rem; }
-  .modal-body { padding: 1rem; }
-  .modal-body img  { max-height: 55vh; }
-  .modal-body video{ max-height: 55vh; }
-  .modal-foot { padding: .8rem 1.2rem; gap: .6rem; flex-direction: column; }
-  .modal-btns { width: 100%; justify-content: flex-end; }
-  .mbtn { padding: 9px 16px; font-size: .8rem; }
-
-  /* EMPTY STATE */
-  .empty { padding: 3rem 1.5rem; }
-  .empty-icon { font-size: 3rem; }
-  .empty h3   { font-size: 1rem; }
-
-  /* BOTTOM NAV BAR for mobile category switching */
-  #mobile-nav {
-    display: flex !important;
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--white);
-    border-top: 2px solid var(--border);
-    z-index: 150;
-    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
-    box-shadow: 0 -4px 20px rgba(0,0,0,.08);
-  }
-  .mn-item {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; gap: 3px;
-    padding: 6px 4px;
-    border: none; background: none; cursor: pointer;
-    border-radius: 10px; transition: background .15s;
-    font-family: var(--font);
-  }
-  .mn-item:active { background: var(--tg-light); }
-  .mn-item.active .mn-icon { color: var(--tg); }
-  .mn-item.active .mn-label { color: var(--tg); font-weight: 800; }
-  .mn-icon  { font-size: 1.3rem; }
-  .mn-label { font-size: .58rem; font-weight: 700; color: var(--muted); }
-
-  /* TOAST fix for mobile nav */
-  .toasts { bottom: 5rem; }
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media (min-width:600px) {
+  .tb-brand-name { display:block; }
 }
 
-/* Larger phones / landscape */
-@media (min-width: 400px) and (max-width: 640px) {
-  .file-grid { grid-template-columns: repeat(3, 1fr); }
+@media (max-width:768px) {
+  .sidebar { display:none; }
+  .main    { padding:1rem 1rem calc(80px + env(safe-area-inset-bottom)); }
+  .file-grid { grid-template-columns:repeat(2,1fr);gap:.75rem; }
+  .fc-overlay { opacity:1;background:rgba(0,0,0,.45); }
+  .fr-meta { display:none; }
+  .fr-acts { opacity:1; }
+  #mob-nav { display:flex; }
+  .toasts  { bottom:calc(4.5rem + env(safe-area-inset-bottom)); }
+  .modal   { max-height:96dvh; }
+  .modal-wrap { padding:.5rem; align-items:flex-end; }
+  .modal   { border-radius:var(--r-xl) var(--r-xl) 0 0; }
+  .modal-foot { flex-direction:column;align-items:stretch; }
+  .modal-foot-btns { justify-content:flex-end; }
+  .topbar  { padding:0 .875rem; }
+  .tb-search { max-width:none; }
 }
 
-/* Tablets */
-@media (min-width: 641px) and (max-width: 900px) {
-  .sidebar { width: 180px; }
-  .file-grid { grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); }
-  .topbar { padding: 0 1rem; }
+@media (min-width:420px) and (max-width:768px) {
+  .file-grid { grid-template-columns:repeat(3,1fr); }
 }
 
-/* Desktop default — mobile nav hidden */
-#mobile-nav { display: none; }
+@media (max-width:480px) {
+  .wiz-body { padding:1.5rem; }
+  .landing-inner { max-width:100%; }
+}
+
+@media (min-width:900px) {
+  .file-grid { grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
+}
+
+#file-input { display:none; }
 </style>
 </head>
 <body>
 
-<!-- ══════════════ WIZARD ══════════════ -->
+<!-- ══════════════════════════════════
+     LANDING PAGE
+══════════════════════════════════ -->
+<div id="landing">
+  <div class="landing-inner">
+    <div class="brand">
+      <div class="brand-icon">📦</div>
+      <div class="brand-name">Tele<em>Store</em></div>
+    </div>
+
+    <div class="landing-headline">
+      <h1>Your <span>Unlimited</span><br>Cloud Storage</h1>
+      <p>Store photos, videos, documents — anything — using Telegram's free unlimited storage. No monthly fees, ever.</p>
+    </div>
+
+    <div class="privacy-badge">
+      <span class="pi">🔒</span>
+      <span><strong>আপনার ব্যক্তিগত কোনো তথ্য নেওয়া হবে না।</strong> শুধুমাত্র একটি Telegram Bot-এর সাথে কানেক্ট হবে — আপনার অ্যাকাউন্ট নয়।</span>
+    </div>
+
+    <div class="feature-pills">
+      <div class="pill"><span class="dot"></span>Unlimited Storage</div>
+      <div class="pill"><span class="dot"></span>100% Free</div>
+      <div class="pill"><span class="dot"></span>Private & Secure</div>
+      <div class="pill"><span class="dot"></span>Large File Support</div>
+    </div>
+
+    <button class="btn-cta" onclick="showWizard()">Get Started — It's Free</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SETUP WIZARD
+══════════════════════════════════ -->
 <div id="wizard">
-  <div class="wiz-card">
-    <div class="wiz-progress"><div class="wiz-fill" id="wfill" style="width:25%"></div></div>
-
-    <div class="wiz-dots">
-      <div class="dot active" id="d0"></div>
-      <div class="dot" id="d1"></div>
-      <div class="dot" id="d2"></div>
-      <div class="dot" id="d3"></div>
+  <div class="wiz-shell">
+    <div class="wiz-bar">
+      <button class="wiz-back" id="wiz-back" onclick="wizBack()">← Back</button>
+      <div class="wiz-seg" id="ws0"></div>
+      <div class="wiz-seg" id="ws1"></div>
+      <div class="wiz-seg" id="ws2"></div>
+      <div class="wiz-seg" id="ws3"></div>
     </div>
 
-    <!-- STEP 0: Welcome -->
-    <div class="wiz-step active" id="s0">
-      <span class="step-emoji">☁️</span>
-      <div class="step-num">Step 1 of 4</div>
-      <div class="step-title">Telegram দিয়ে<br>ফ্রি ক্লাউড স্টোরেজ!</div>
-      <div class="step-desc">TeleStore আপনার Telegram-এর বট স্টোরেজকে ব্যক্তিগত ক্লাউড ড্রাইভে পরিণত করে। ছবি, ভিডিও, ডকুমেন্ট — যেকোনো কিছু রাখুন! মাত্র ২ মিনিটে সেটআপ করুন।</div>
+    <div class="wiz-body">
 
-      <!-- Bengali privacy notice box -->
-      <div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid #f59e0b;border-radius:14px;padding:14px 16px;margin-bottom:1rem;">
-        <div style="font-weight:900;font-size:.9rem;color:#92400e;margin-bottom:6px;">🔒 আপনার গোপনীয়তা ১০০% সুরক্ষিত</div>
-        <div style="font-size:.82rem;color:#78350f;line-height:1.7;">
-          ✅ আপনার <strong>ব্যক্তিগত কোনো তথ্য নেওয়া হবে না</strong><br>
-          ✅ শুধুমাত্র একটি <strong>Telegram Bot-এর সাথে কানেক্ট</strong> হবে<br>
-          ✅ আপনার নাম, নম্বর বা অ্যাকাউন্ট আমরা দেখতে পাই না<br>
-          ✅ সব ফাইল সরাসরি আপনার <strong>নিজের Bot-এ</strong> সংরক্ষিত হয়
+      <!-- Step 0: Create Bot -->
+      <div class="wiz-step active" id="ws-0">
+        <div class="step-eyebrow">Step 1 of 3</div>
+        <div class="step-title">Create your storage bot</div>
+        <div class="step-sub">A Telegram bot acts as your private file vault. Follow these 3 steps:</div>
+
+        <div class="instr-row">
+          <div class="inr-num">1</div>
+          <div class="inr-text">Open <strong>@BotFather</strong> in Telegram — tap the button below</div>
         </div>
-      </div>
-
-      <div class="instr">
-        <div class="instr-num">✓</div>
-        <div class="instr-text"><strong>সম্পূর্ণ বিনামূল্যে</strong> — Telegram সবাইকে আনলিমিটেড স্টোরেজ দেয়</div>
-      </div>
-      <div class="instr">
-        <div class="instr-num">✓</div>
-        <div class="instr-text"><strong>সম্পূর্ণ প্রাইভেট</strong> — শুধুমাত্র আপনিই আপনার ফাইল দেখতে পাবেন</div>
-      </div>
-      <div class="instr">
-        <div class="instr-num">✓</div>
-        <div class="instr-text"><strong>কোনো অ্যাকাউন্ট লাগবে না</strong> — শুধু আপনার Telegram Bot Token দিলেই হবে</div>
-      </div>
-      <button class="btn-primary" onclick="goStep(1)">শুরু করুন →</button>
-    </div>
-
-    <!-- STEP 1: Create Bot -->
-    <div class="wiz-step" id="s1">
-      <span class="step-emoji">🤖</span>
-      <div class="step-num">Step 2 of 4</div>
-      <div class="step-title">Create your personal<br>storage bot</div>
-      <div class="step-desc">We'll create a private bot on Telegram that stores your files. Think of it as your personal filing cabinet. Just follow these 3 easy steps:</div>
-
-      <div class="instr">
-        <div class="instr-num">1</div>
-        <div class="instr-text">Tap the button below to open <strong>BotFather</strong> in Telegram (the official bot maker)</div>
-      </div>
-      <div class="instr">
-        <div class="instr-num">2</div>
-        <div class="instr-text">Send this message: <code>/newbot</code> — then give your bot any name you like</div>
-      </div>
-      <div class="instr">
-        <div class="instr-num">3</div>
-        <div class="instr-text">BotFather will send you a <strong>Token</strong> — a long code like <code>123456:ABCdef...</code> — copy it</div>
-      </div>
-
-      <a href="https://t.me/BotFather" target="_blank" class="open-tg-btn">
-        <span>✈️</span> Open BotFather in Telegram
-      </a>
-
-      <div class="field" style="margin-bottom:.5rem;">
-        <label>Paste your Bot Token here 👇</label>
-        <div class="hint">It looks like: <code style="background:var(--tg-light);color:var(--tg-dark);padding:2px 6px;border-radius:5px;font-family:var(--mono);font-size:.8rem;">1234567890:ABCdefGHIjkl...</code></div>
-        <input class="inp" id="token-inp" type="text" placeholder="Paste your token here..." oninput="onTokenInput()">
-      </div>
-      <div class="status-box" id="token-status"></div>
-      <button class="btn-primary" id="token-next-btn" disabled onclick="verifyToken()">Verify Token →</button>
-      <button class="btn-secondary" onclick="goStep(0)">← Back</button>
-    </div>
-
-    <!-- STEP 2: Auto-detect Chat ID -->
-    <div class="wiz-step" id="s2">
-      <span class="step-emoji">🤖</span>
-      <div class="step-num">Step 3 of 4</div>
-      <div class="step-title">Connect Telegram<br>Bot Storage</div>
-      <div class="step-desc">এখন আপনার Bot-এর সাথে কানেক্ট করুন। এটি আপনার ব্যক্তিগত Telegram অ্যাকাউন্ট নয় — শুধুমাত্র আপনার তৈরি Bot-এর সাথে সংযোগ হবে।</div>
-
-      <div class="instr">
-        <div class="instr-num">1</div>
-        <div class="instr-text">Tap the button below to open <strong>your new bot</strong> in Telegram</div>
-      </div>
-      <div class="instr">
-        <div class="instr-num">2</div>
-        <div class="instr-text">Send it <em>any</em> message — like <code>hello</code> or just <code>/start</code></div>
-      </div>
-      <div class="instr">
-        <div class="instr-num">3</div>
-        <div class="instr-text">ফিরে এসে <strong>"Bot Storage কানেক্ট করুন"</strong> বোতামে ট্যাপ করুন — আমরা স্বয়ংক্রিয়ভাবে খুঁজে নেব!</div>
-      </div>
-
-      <a href="#" id="open-bot-link" target="_blank" class="open-tg-btn">
-        <span>✈️</span> Open My Bot in Telegram
-      </a>
-
-      <div class="detecting-wrap" id="detecting-wrap">
-        <div class="detect-ring"></div>
-        <div class="detect-label">Bot Storage খোঁজা হচ্ছে…</div>
-        <div class="detect-sub">কয়েক সেকেন্ড সময় লাগবে</div>
-      </div>
-
-      <div class="chat-pill" id="chat-pill">
-        <div class="chat-pill-icon">✅</div>
-        <div class="chat-pill-info">
-          <div class="chat-pill-name" id="pill-name">Found you!</div>
-          <div class="chat-pill-id" id="pill-id">Bot Storage ID: —</div>
+        <div class="instr-row">
+          <div class="inr-num">2</div>
+          <div class="inr-text">Send <code>/newbot</code> and give it any name you like</div>
         </div>
+        <div class="instr-row">
+          <div class="inr-num">3</div>
+          <div class="inr-text">BotFather will send a <strong>Token</strong> — copy it, then come back here</div>
+        </div>
+
+        <a href="https://t.me/BotFather" target="_blank" class="btn-tg">
+          <span>✈️</span> Open BotFather in Telegram
+        </a>
+
+        <div class="field">
+          <div class="field-label">Paste your Bot Token</div>
+          <div class="field-hint">Looks like: <code style="font-family:var(--mono);color:var(--c-teal)">123456789:ABCdef...</code></div>
+          <input class="finp" id="token-inp" type="text" placeholder="Paste token here…" oninput="onTokenInput()" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="s-banner" id="token-banner"></div>
+        <button class="btn-primary" id="token-btn" disabled onclick="verifyToken()">Verify Token →</button>
       </div>
 
-      <div class="status-box" id="detect-status"></div>
+      <!-- Step 1: Connect Account -->
+      <div class="wiz-step" id="ws-1">
+        <div class="step-eyebrow">Step 2 of 3</div>
+        <div class="step-title">Connect Bot Storage</div>
+        <div class="step-sub">Open your new bot and send it any message. We'll detect your storage automatically — no manual IDs needed.</div>
 
-      <button class="btn-primary" id="detect-btn" onclick="detectChatId()">🔍 Bot Storage কানেক্ট করুন</button>
-      <button class="btn-primary" id="proceed-btn" style="display:none; background:linear-gradient(135deg,var(--green),#15803d);" onclick="goStep(3)">Continue →</button>
-      <button class="btn-secondary" onclick="goStep(1)">← Back</button>
-    </div>
+        <div class="instr-row">
+          <div class="inr-num">1</div>
+          <div class="inr-text">Tap the button below to open <strong>your bot</strong> in Telegram</div>
+        </div>
+        <div class="instr-row">
+          <div class="inr-num">2</div>
+          <div class="inr-text">Send it any message — <code>hello</code> or <code>/start</code></div>
+        </div>
+        <div class="instr-row">
+          <div class="inr-num">3</div>
+          <div class="inr-text">Come back here and tap <strong>Detect Storage</strong></div>
+        </div>
 
-    <!-- STEP 3: Done! -->
-    <div class="wiz-step" id="s3">
-      <span class="step-emoji">🎉</span>
-      <div class="step-num">Step 4 of 4</div>
-      <div class="step-title">You're all set!</div>
-      <div class="step-desc">Your personal Telegram cloud storage is ready. You can now upload and access your files from anywhere!</div>
-      <div class="instr" style="background:var(--green-light);border-color:var(--green);">
-        <div class="instr-num" style="background:var(--green);">✓</div>
-        <div class="instr-text"><strong style="color:#15803d;">Connected successfully!</strong> Your files are stored privately in your Telegram account.</div>
+        <a href="#" id="open-bot-link" target="_blank" class="btn-tg">
+          <span>✈️</span> Open My Bot in Telegram
+        </a>
+
+        <div class="detect-spin" id="detect-spin">
+          <div class="ds-ring"></div>
+          <div class="ds-label">Detecting your storage…</div>
+          <div class="ds-sub">This takes a few seconds</div>
+        </div>
+
+        <div class="detected-pill" id="detected-pill">
+          <div class="dp-icon">✅</div>
+          <div>
+            <div class="dp-name" id="dp-name">Connected!</div>
+            <div class="dp-id" id="dp-id"></div>
+          </div>
+        </div>
+
+        <div class="s-banner" id="detect-banner"></div>
+        <button class="btn-primary" id="detect-btn" onclick="detectChatId()">🔍 Detect Storage</button>
+        <button class="btn-primary" id="proceed-btn" style="display:none;background:linear-gradient(135deg,var(--c-green),#15803d);" onclick="goWizStep(2)">Continue →</button>
       </div>
-      <div class="instr">
-        <div class="instr-num">📁</div>
-        <div class="instr-text">Upload any file — photos, videos, PDFs, documents — up to <strong>50MB each</strong></div>
+
+      <!-- Step 2: Done -->
+      <div class="wiz-step" id="ws-2">
+        <div class="success-icon">🎉</div>
+        <div class="step-eyebrow" style="text-align:center;">All Set!</div>
+        <div class="step-title" style="text-align:center;">Storage is ready</div>
+        <div class="step-sub" style="text-align:center;">Your Telegram bot is connected. Upload photos, videos, documents — anything up to any size.</div>
+
+        <div class="instr-row" style="background:var(--c-green-soft);border-color:rgba(34,197,94,.25);">
+          <div class="inr-num" style="background:var(--c-green);">✓</div>
+          <div class="inr-text" style="color:var(--c-green);">Connected securely. Only you can access your files.</div>
+        </div>
+        <div class="instr-row">
+          <div class="inr-num">📁</div>
+          <div class="inr-text">Upload <strong>any file size</strong> — large files are split automatically</div>
+        </div>
+        <div class="instr-row">
+          <div class="inr-num">🔄</div>
+          <div class="inr-text">Use <strong>Sync</strong> to restore all files after reconnecting</div>
+        </div>
+
+        <button class="btn-primary" onclick="launchApp()">🚀 Open My Storage</button>
       </div>
-      <div class="instr">
-        <div class="instr-num">🔐</div>
-        <div class="instr-text">Your files are <strong>100% private</strong> — only accessible through this app with your token</div>
-      </div>
-      <button class="btn-primary" onclick="launchApp()">🚀 Open My Cloud Storage</button>
+
     </div>
   </div>
 </div>
 
-<!-- ══════════════ APP ══════════════ -->
+<!-- ══════════════════════════════════
+     APP
+══════════════════════════════════ -->
 <div id="app">
-  <div class="topbar">
-    <div class="app-logo">Tele<span>Store</span></div>
-    <div class="topbar-search">
-      <span class="si">🔍</span>
-      <input type="text" placeholder="Search your files…" id="search-inp" oninput="doSearch()">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="tb-brand">
+      <div class="tb-brand-icon">📦</div>
+      <div class="tb-brand-name">Tele<em>Store</em></div>
     </div>
-    <div class="topbar-right">
-      <div class="user-pill" onclick="showAccountMenu()" style="cursor:pointer;" title="Account & Settings">
-        <div class="user-avatar" id="user-av">U</div>
-        <span id="user-name-top">My Storage</span>
-        <span style="font-size:.7rem;margin-left:2px;opacity:.6;">▾</span>
-      </div>
-      <button class="icon-btn" id="sync-btn" title="Sync from Telegram" onclick="syncFromTelegram()" style="font-size:.85rem;">🔄</button>
-      <button class="icon-btn" title="Account Menu" onclick="showAccountMenu()" style="display:none;" id="acct-btn">👤</button>
-      <button class="up-btn" onclick="openDrop()">⬆ Upload</button>
+
+    <div class="tb-search">
+      <svg viewBox="0 0 20 20"><path d="M12.9 14.32a8 8 0 111.41-1.41l4.39 4.39-1.41 1.41-4.39-4.39zM8 14A6 6 0 108 2a6 6 0 000 12z"/></svg>
+      <input type="text" placeholder="Search files…" id="search-inp" oninput="doSearch()">
     </div>
-  </div>
+
+    <div class="tb-right">
+      <button class="tb-btn" id="sync-btn" onclick="syncFromTelegram()" title="Sync from Telegram">
+        <svg viewBox="0 0 20 20"><path d="M10 3a7 7 0 00-7 7H1l3 3 3-3H5a5 5 0 111.54 3.61l-1.42 1.42A7 7 0 1010 3z"/></svg>
+        <span class="hide-xs">Sync</span>
+      </button>
+      <button class="tb-upload" onclick="openUpload()">
+        <svg viewBox="0 0 20 20"><path d="M10 2a1 1 0 01.7.3l4 4a1 1 0 01-1.4 1.4L11 5.4V14a1 1 0 01-2 0V5.4L6.7 7.7a1 1 0 01-1.4-1.4l4-4A1 1 0 0110 2zM3 16a1 1 0 110 2h14a1 1 0 110-2H3z"/></svg>
+        Upload
+      </button>
+      <div class="tb-avatar" id="tb-av" onclick="showAccountMenu()">U</div>
+    </div>
+  </header>
 
   <div class="app-body">
+
+    <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="sb-label">Browse</div>
-      <button class="sb-item active" onclick="setCategory('all',this)"><span class="emoji">🗂️</span>All Files<span class="sb-count" id="cnt-all">0</span></button>
-      <button class="sb-item" onclick="setCategory('image',this)"><span class="emoji">🖼️</span>Photos<span class="sb-count" id="cnt-image">0</span></button>
-      <button class="sb-item" onclick="setCategory('video',this)"><span class="emoji">🎬</span>Videos<span class="sb-count" id="cnt-video">0</span></button>
-      <button class="sb-item" onclick="setCategory('pdf',this)"><span class="emoji">📄</span>PDFs<span class="sb-count" id="cnt-pdf">0</span></button>
-      <button class="sb-item" onclick="setCategory('audio',this)"><span class="emoji">🎵</span>Audio<span class="sb-count" id="cnt-audio">0</span></button>
-      <button class="sb-item" onclick="setCategory('document',this)"><span class="emoji">📝</span>Documents<span class="sb-count" id="cnt-document">0</span></button>
-      <button class="sb-item" onclick="setCategory('archive',this)"><span class="emoji">🗜️</span>Archives<span class="sb-count" id="cnt-archive">0</span></button>
-      <div class="sb-spacer"></div>
-      <div class="sb-user">
-        <div class="sb-user-name" id="sb-name">My Storage</div>
-        <div class="sb-user-info" id="sb-info">0 files · 0 KB</div>
-        <button class="sb-disconnect" onclick="disconnect()">Disconnect ↗</button>
+      <div class="sb-section">Browse</div>
+      <button class="sb-item active" onclick="setCategory('all',this)"><span class="si">🗂️</span>All Files<span class="sb-count" id="cnt-all">0</span></button>
+      <button class="sb-item" onclick="setCategory('image',this)"><span class="si">🖼️</span>Photos<span class="sb-count" id="cnt-image">0</span></button>
+      <button class="sb-item" onclick="setCategory('video',this)"><span class="si">🎬</span>Videos<span class="sb-count" id="cnt-video">0</span></button>
+      <button class="sb-item" onclick="setCategory('pdf',this)"><span class="si">📄</span>PDFs<span class="sb-count" id="cnt-pdf">0</span></button>
+      <button class="sb-item" onclick="setCategory('audio',this)"><span class="si">🎵</span>Audio<span class="sb-count" id="cnt-audio">0</span></button>
+      <button class="sb-item" onclick="setCategory('document',this)"><span class="si">📝</span>Documents<span class="sb-count" id="cnt-document">0</span></button>
+      <button class="sb-item" onclick="setCategory('archive',this)"><span class="si">🗜️</span>Archives<span class="sb-count" id="cnt-archive">0</span></button>
+      <div class="sb-footer">
+        <div class="sb-user-card">
+          <div class="suc-name" id="sb-name">My Storage</div>
+          <div class="suc-bot"  id="sb-bot">@bot</div>
+          <div class="suc-stats" id="sb-stats">0 files</div>
+          <div class="suc-btns">
+            <button class="suc-btn" onclick="syncFromTelegram()">🔄 Sync</button>
+            <button class="suc-btn danger" onclick="disconnect()">⏏ Exit</button>
+          </div>
+        </div>
       </div>
     </aside>
 
+    <!-- Main -->
     <main class="main">
-      <div class="cat-header">
+      <div class="main-header">
         <div>
-          <div class="cat-title" id="cat-title">All Files</div>
-          <div class="cat-sub" id="cat-sub">Loading…</div>
+          <div class="main-title" id="cat-title">All Files</div>
+          <div class="main-sub" id="cat-sub">Loading…</div>
         </div>
         <div class="view-toggle">
-          <button class="vbtn active" id="vg" onclick="setView('grid')" title="Grid">⊞</button>
-          <button class="vbtn" id="vl" onclick="setView('list')" title="List">☰</button>
+          <button class="vtbtn active" id="vg" onclick="setView('grid')">
+            <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+          </button>
+          <button class="vtbtn" id="vl" onclick="setView('list')">
+            <svg viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="14" height="2" rx="1"/><rect x="1" y="12" width="14" height="2" rx="1"/></svg>
+          </button>
         </div>
       </div>
-      <div id="file-area"><div class="spin"></div></div>
+      <div id="file-area"><div class="spin-center"><div class="spinner"></div></div></div>
     </main>
-  </div>
-</div>
 
-<!-- Upload Drop Panel -->
-<div class="drop-panel" id="drop-panel">
-  <div class="dp-head">
-    <span>⬆ Upload Files</span>
-    <button class="dp-close" onclick="closeDrop()">✕</button>
-  </div>
-  <div class="dp-zone" id="dp-zone" onclick="document.getElementById('file-input').click()">
-    <div class="dp-zone-icon">📂</div>
-    <div class="dp-zone-text">Drop files here or tap to choose</div>
-    <div class="dp-zone-sub">Any size — large files split automatically</div>
-  </div>
-  <div class="dp-list" id="dp-list"></div>
-</div>
-
-<!-- Viewer Modal -->
-<div id="modal-bg" style="display:none;" onclick="bgClick(event)">
-  <div class="modal-bg">
-    <div class="modal" id="modal">
-      <div class="modal-head">
-        <span id="m-title" class="modal-title">File</span>
-        <button class="mbtn mbtn-ghost" id="m-dl" style="padding:6px 14px;" onclick="dlCurrent()">⬇ Save</button>
-        <button class="modal-close" onclick="closeModal()">✕</button>
-      </div>
-      <div class="modal-body" id="m-body"><div class="spin"></div></div>
-      <div class="modal-foot">
-        <div class="modal-meta" id="m-meta"></div>
-        <div class="modal-btns">
-          <button class="mbtn mbtn-ghost" onclick="closeModal()">Close</button>
-          <button class="mbtn mbtn-primary" onclick="openTG()">Open in Telegram ↗</button>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
 <!-- Mobile Bottom Nav -->
-<nav id="mobile-nav" style="display:none;">
-  <button class="mn-item active" id="mn-all" onclick="mobileNav('all',this)">
-    <span class="mn-icon">🗂️</span><span class="mn-label">All</span>
-  </button>
-  <button class="mn-item" id="mn-image" onclick="mobileNav('image',this)">
-    <span class="mn-icon">🖼️</span><span class="mn-label">Photos</span>
-  </button>
-  <button class="mn-item" id="mn-video" onclick="mobileNav('video',this)">
-    <span class="mn-icon">🎬</span><span class="mn-label">Videos</span>
-  </button>
-  <button class="mn-item" id="mn-pdf" onclick="mobileNav('pdf',this)">
-    <span class="mn-icon">📄</span><span class="mn-label">PDFs</span>
-  </button>
-  <button class="mn-item" onclick="openDrop()">
-    <span class="mn-icon">⬆️</span><span class="mn-label">Upload</span>
-  </button>
-  <button class="mn-item" onclick="showAccountMenu()">
-    <span class="mn-icon">👤</span><span class="mn-label">Account</span>
-  </button>
+<nav id="mob-nav">
+  <button class="mn-item active" id="mn-all" onclick="mobileNav('all',this)"><span class="mn-ico">🗂️</span><span class="mn-lbl">All</span></button>
+  <button class="mn-item" id="mn-image" onclick="mobileNav('image',this)"><span class="mn-ico">🖼️</span><span class="mn-lbl">Photos</span></button>
+  <button class="mn-item" id="mn-video" onclick="mobileNav('video',this)"><span class="mn-ico">🎬</span><span class="mn-lbl">Videos</span></button>
+  <button class="mn-item" id="mn-pdf" onclick="mobileNav('pdf',this)"><span class="mn-ico">📄</span><span class="mn-lbl">PDFs</span></button>
+  <button class="mn-item" onclick="openUpload()"><span class="mn-ico">⬆️</span><span class="mn-lbl">Upload</span></button>
+  <button class="mn-item" onclick="showAccountMenu()"><span class="mn-ico">👤</span><span class="mn-lbl">Account</span></button>
 </nav>
+
+<!-- Upload Sheet -->
+<div class="upload-sheet" id="upload-sheet">
+  <div class="us-handle"></div>
+  <div class="us-head">
+    <div class="us-title">Upload Files</div>
+    <button class="us-close" onclick="closeUpload()">✕</button>
+  </div>
+  <div class="us-drop" id="us-drop" onclick="document.getElementById('file-input').click()">
+    <div class="us-drop-icon">📂</div>
+    <div class="us-drop-text">Drop files here or tap to browse</div>
+    <div class="us-drop-sub">Any size • Large files split automatically</div>
+  </div>
+  <div class="us-list" id="us-list"></div>
+</div>
+
+<!-- Viewer Modal -->
+<div class="modal-wrap" id="modal-wrap" onclick="modalBgClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="m-title">File</div>
+      <div class="modal-acts">
+        <button class="m-btn" id="m-dl-btn">
+          <svg viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v9.6l2.3-2.3a1 1 0 111.4 1.4l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L9 12.6V3a1 1 0 011-1zM3 17a1 1 0 110 2h14a1 1 0 110-2H3z"/></svg>
+          Save
+        </button>
+        <button class="m-btn" onclick="openInTelegram()">
+          <svg viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.6L8 10.6a1 1 0 001.4 1.4L15 6.4V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/></svg>
+          Telegram
+        </button>
+        <button class="m-btn-close" onclick="closeModal()">
+          <svg viewBox="0 0 20 20"><path d="M4.3 4.3a1 1 0 011.4 0L10 8.6l4.3-4.3a1 1 0 111.4 1.4L11.4 10l4.3 4.3a1 1 0 01-1.4 1.4L10 11.4l-4.3 4.3a1 1 0 01-1.4-1.4L8.6 10 4.3 5.7a1 1 0 010-1.4z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body" id="m-body"><div class="spin-center"><div class="spinner"></div></div></div>
+    <div class="modal-foot">
+      <div class="modal-meta" id="m-meta"></div>
+      <div class="modal-foot-btns">
+        <button class="m-btn" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <input type="file" id="file-input" multiple onchange="onFilePick(this.files)">
 <div class="toasts" id="toasts"></div>
 
 <script>
-// ── STATE ─────────────────────────────
-let TOKEN='', CHAT='', BOT_NAME='', USER_NAME='', USER_ID='';
+'use strict';
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let TOKEN='', CHAT='', BOT_NAME='', USER_NAME='';
 let files=[], filtered=[], view='grid', category='all', curFile=null;
-const SK='ts_cfg', IK='ts_idx';
+const SK='ts2_cfg', IK='ts2_idx';
+const CHUNK_SIZE = 45 * 1024 * 1024; // 45 MB
 
-// ── WIZARD LOGIC ──────────────────────
+// ═══════════════════════════════════════
+// LANDING / WIZARD
+// ═══════════════════════════════════════
+function showWizard(){
+  document.getElementById('landing').style.display='none';
+  document.getElementById('wizard').style.display='flex';
+  updateWizBar(0);
+}
+
 let wStep=0;
-const fills=[25,50,75,100];
-
-function goStep(n){
-  document.getElementById('s'+wStep).classList.remove('active');
-  document.getElementById('d'+wStep).classList.remove('active');
-  document.getElementById('d'+wStep).classList.add('done');
+function updateWizBar(n){
+  for(let i=0;i<4;i++){
+    const el=document.getElementById('ws'+i);
+    if(!el) continue;
+    el.className='wiz-seg'+(i<n?' done':i===n?' active':'');
+  }
+  document.getElementById('wiz-back').classList.toggle('show', n>0);
+}
+function wizBack(){
+  if(wStep>0) goWizStep(wStep-1);
+  else { document.getElementById('wizard').style.display='none'; document.getElementById('landing').style.display='flex'; }
+}
+function goWizStep(n){
+  document.getElementById('ws-'+wStep).classList.remove('active');
   wStep=n;
-  document.getElementById('s'+n).classList.add('active');
-  document.getElementById('d'+n).classList.add('active');
-  document.getElementById('wfill').style.width=fills[n]+'%';
-  // reset detect state on revisit
-  if(n===2){
-    document.getElementById('chat-pill').classList.remove('show');
+  document.getElementById('ws-'+n).classList.add('active');
+  updateWizBar(n);
+  if(n===1){
+    document.getElementById('detected-pill').classList.remove('show');
     document.getElementById('proceed-btn').style.display='none';
     document.getElementById('detect-btn').style.display='block';
-    showStatus('detect-status','');
+    setBanner('detect-banner','');
   }
 }
 
 function onTokenInput(){
   const v=document.getElementById('token-inp').value.trim();
   const ok=/^\d+:[A-Za-z0-9_-]{35,}$/.test(v);
-  document.getElementById('token-next-btn').disabled=!ok;
-  document.getElementById('token-inp').className='inp'+(ok?' ok':'');
-  showStatus('token-status','');
+  document.getElementById('token-btn').disabled=!ok;
+  document.getElementById('token-inp').className='finp'+(ok?' v-ok':'');
+  setBanner('token-banner','');
 }
 
 async function verifyToken(){
   const t=document.getElementById('token-inp').value.trim();
-  showStatus('token-status','⏳ Checking token…','loading');
-  document.getElementById('token-next-btn').disabled=true;
+  setBanner('token-banner','⏳ Verifying token…','loading');
+  document.getElementById('token-btn').disabled=true;
   try{
-    const r=await fetch(`https://api.telegram.org/bot${t}/getMe`).then(x=>x.json());
+    const r=await apiFetch(`https://api.telegram.org/bot${t}/getMe`);
     if(!r.ok) throw new Error(r.description||'Invalid token');
-    TOKEN=t;
-    BOT_NAME=r.result.username;
+    TOKEN=t; BOT_NAME=r.result.username;
     document.getElementById('open-bot-link').href=`https://t.me/${BOT_NAME}`;
-    showStatus('token-status',`✅ Bot @${BOT_NAME} verified!`,'success');
-    setTimeout(()=>goStep(2),800);
+    setBanner('token-banner',`✅ @${BOT_NAME} verified!`,'ok');
+    setTimeout(()=>goWizStep(1),700);
   }catch(e){
-    showStatus('token-status','❌ '+e.message,'error');
-    document.getElementById('token-inp').className='inp err';
-    document.getElementById('token-next-btn').disabled=false;
+    setBanner('token-banner','❌ '+e.message,'err');
+    document.getElementById('token-inp').className='finp v-err';
+    document.getElementById('token-btn').disabled=false;
   }
 }
 
 async function detectChatId(){
   document.getElementById('detect-btn').style.display='none';
-  document.getElementById('detecting-wrap').classList.add('show');
-  showStatus('detect-status','');
-
-  // Poll getUpdates for up to 12 seconds
-  const deadline=Date.now()+12000;
+  document.getElementById('detect-spin').classList.add('show');
+  setBanner('detect-banner','');
+  const deadline=Date.now()+15000;
   let found=null;
-  while(Date.now()<deadline){
+  while(Date.now()<deadline && !found){
     try{
-      const r=await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?limit=20`).then(x=>x.json());
-      if(r.ok && r.result.length>0){
-        // find latest private message
-        const msgs=r.result.filter(u=>u.message&&u.message.chat&&u.message.chat.type==='private');
-        if(msgs.length>0){
-          const last=msgs[msgs.length-1].message;
-          found={
-            id:   String(last.chat.id),
-            name: [last.from.first_name, last.from.last_name].filter(Boolean).join(' ')||'You',
-            username: last.from.username||''
-          };
-          break;
+      const r=await apiFetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?limit=50`);
+      if(r.ok){
+        const msgs=r.result.filter(u=>u.message?.chat?.type==='private');
+        if(msgs.length){
+          const m=msgs[msgs.length-1].message;
+          found={id:String(m.chat.id),name:[m.from.first_name,m.from.last_name].filter(Boolean).join(' ')||'You',username:m.from.username||''};
         }
       }
     }catch{}
-    await delay(2000);
+    if(!found) await delay(2000);
   }
-
-  document.getElementById('detecting-wrap').classList.remove('show');
-
+  document.getElementById('detect-spin').classList.remove('show');
   if(found){
-    CHAT=found.id;
-    USER_NAME=found.name;
-    USER_ID=found.username;
-    document.getElementById('pill-name').textContent='👋 '+found.name+(found.username?' (@'+found.username+')':'');
-    document.getElementById('pill-id').textContent='Bot Storage ID: '+found.id+' — Connected!';
-    document.getElementById('chat-pill').classList.add('show');
+    CHAT=found.id; USER_NAME=found.name;
+    document.getElementById('dp-name').textContent='👋 '+found.name+(found.username?' (@'+found.username+')':'');
+    document.getElementById('dp-id').textContent='Storage ID: '+found.id;
+    document.getElementById('detected-pill').classList.add('show');
     document.getElementById('proceed-btn').style.display='block';
-    showStatus('detect-status','');
   }else{
     document.getElementById('detect-btn').style.display='block';
-    showStatus('detect-status','❌ Couldn\'t find your message. Make sure you sent something to your bot in Telegram, then try again!','error');
+    setBanner('detect-banner','❌ No message detected. Send any message to your bot, then try again.','err');
   }
 }
 
@@ -1174,94 +1409,126 @@ function launchApp(){
   startApp();
 }
 
-function showStatus(id,msg,type=''){
+function setBanner(id,msg,type=''){
   const el=document.getElementById(id);
-  el.className='status-box'+(type?' '+type:'');
+  if(!el) return;
+  el.className='s-banner'+(type?' '+type:'')+(msg?' show':'');
   el.textContent=msg;
-  if(!msg) el.className='status-box';
 }
 
-// ── AUTO LOGIN ────────────────────────
-(function(){
+// ═══════════════════════════════════════
+// AUTO LOGIN
+// ═══════════════════════════════════════
+(function autoLogin(){
   try{
     const s=JSON.parse(localStorage.getItem(SK)||'null');
-    if(s?.token&&s?.chat){ TOKEN=s.token; CHAT=s.chat; BOT_NAME=s.bot||''; USER_NAME=s.user||'My Storage'; startApp(); }
+    if(s?.token&&s?.chat){
+      TOKEN=s.token; CHAT=s.chat; BOT_NAME=s.bot||''; USER_NAME=s.user||'';
+      startApp();
+    }
   }catch{}
 })();
 
 function startApp(){
-  document.getElementById('wizard').style.display='none';
+  ['landing','wizard'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
   document.getElementById('app').style.display='flex';
-  const av=USER_NAME?USER_NAME[0].toUpperCase():'U';
-  document.getElementById('user-av').textContent=av;
-  document.getElementById('user-name-top').textContent=USER_NAME||'My Storage';
+  const av=(USER_NAME||'U')[0].toUpperCase();
+  document.getElementById('tb-av').textContent=av;
   document.getElementById('sb-name').textContent=USER_NAME||'My Storage';
+  document.getElementById('sb-bot').textContent=BOT_NAME?'@'+BOT_NAME:'';
   loadFiles();
-  setupDrag();
+  setupDragDrop();
 }
 
 function disconnect(){
-  if(!confirm('Disconnect and clear your session?')) return;
-  localStorage.removeItem(SK);
-  localStorage.removeItem(IK);
+  if(!confirm('Disconnect and clear this session?')) return;
+  localStorage.removeItem(SK); localStorage.removeItem(IK);
   location.reload();
 }
 
-// ── FILE INDEX ────────────────────────
-function idx(){ try{ return JSON.parse(localStorage.getItem(IK)||'[]'); }catch{ return []; } }
-function saveIdx(a){ localStorage.setItem(IK,JSON.stringify(a)); }
-function addIdx(e){ const a=idx(); a.unshift(e); saveIdx(a); }
-function delIdx(id){ saveIdx(idx().filter(f=>f.msg_id!=id)); }
+// ═══════════════════════════════════════
+// FILE INDEX (localStorage)
+// ═══════════════════════════════════════
+function getIdx()    { try{return JSON.parse(localStorage.getItem(IK)||'[]');}catch{return[];} }
+function saveIdx(a)  { localStorage.setItem(IK,JSON.stringify(a)); }
+function addToIdx(e) { const a=getIdx(); a.unshift(e); saveIdx(a); }
+function delFromIdx(id){ saveIdx(getIdx().filter(f=>String(f.msg_id)!==String(id))); }
 
-// ── TG API ────────────────────────────
+// ═══════════════════════════════════════
+// TG API HELPERS
+// ═══════════════════════════════════════
+async function apiFetch(url, opts={}){
+  const r=await fetch(url,opts);
+  return r.json();
+}
 const TG={
-  api:(m,p={})=>{
+  get:(m,p={})=>{
     const u=new URL(`https://api.telegram.org/bot${TOKEN}/${m}`);
-    Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,v));
-    return fetch(u).then(r=>r.json());
+    Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,String(v)));
+    return apiFetch(u.toString());
   },
-  sendDoc:(file)=>{
-    const f=new FormData();
-    f.append('chat_id',CHAT);
-    f.append('document',file,file.name);
-    f.append('caption',`TeleStore|${file.name}|${file.type}|${file.size}`);
-    return fetch(`https://api.telegram.org/bot${TOKEN}/sendDocument`,{method:'POST',body:f}).then(r=>r.json());
-  },
-  link:(fid)=>TG.api('getFile',{file_id:fid}).then(r=>r.ok?`https://api.telegram.org/file/bot${TOKEN}/${r.result.file_path}`:null),
-  del:(mid)=>TG.api('deleteMessage',{chat_id:CHAT,message_id:mid})
+  post:(m,body)=>apiFetch(`https://api.telegram.org/bot${TOKEN}/${m}`,{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+  }),
+  sendDoc:(fd)=>apiFetch(`https://api.telegram.org/bot${TOKEN}/sendDocument`,{method:'POST',body:fd}),
+  getLink:(fid)=>TG.get('getFile',{file_id:fid}).then(r=>r.ok?`https://api.telegram.org/file/bot${TOKEN}/${r.result.file_path}`:null),
+  del:(mid)=>TG.post('deleteMessage',{chat_id:CHAT,message_id:mid})
 };
 
-// ── LOAD FILES ────────────────────────
+// ═══════════════════════════════════════
+// FILE TYPES
+// ═══════════════════════════════════════
+function ftype(name='',mime=''){
+  const e=name.split('.').pop().toLowerCase();
+  const m=mime.toLowerCase();
+  if(/^image\//.test(m)||/^(jpg|jpeg|png|gif|webp|bmp|svg|avif)$/.test(e)) return 'image';
+  if(/^video\//.test(m)||/^(mp4|mov|avi|mkv|webm|flv|m4v)$/.test(e)) return 'video';
+  if(m==='application/pdf'||e==='pdf') return 'pdf';
+  if(/^audio\//.test(m)||/^(mp3|wav|flac|ogg|aac|m4a)$/.test(e)) return 'audio';
+  if(/^(doc|docx|xls|xlsx|ppt|pptx|txt|md|csv|rtf)$/.test(e)) return 'document';
+  if(/^(zip|rar|7z|tar|gz|bz2)$/.test(e)) return 'archive';
+  return 'other';
+}
+const ICONS={image:'🖼️',video:'🎬',pdf:'📕',audio:'🎵',document:'📝',archive:'🗜️',other:'📦'};
+const TCLASS={image:'t-img',video:'t-vid',pdf:'t-pdf',audio:'t-aud',document:'t-doc',archive:'t-zip',other:'t-oth'};
+const fi=t=>ICONS[t]||'📦';
+const fc=t=>TCLASS[t]||'t-oth';
+
+// ═══════════════════════════════════════
+// LOAD & RENDER
+// ═══════════════════════════════════════
 function loadFiles(){
-  document.getElementById('file-area').innerHTML='<div class="spin"></div>';
-  files=idx();
+  document.getElementById('file-area').innerHTML='<div class="spin-center"><div class="spinner"></div></div>';
+  files=getIdx();
   applyFilter();
   updateCounts();
 }
 
-// ── FILE TYPES ────────────────────────
-function ftype(name='',mime=''){
-  const e=name.split('.').pop().toLowerCase();
-  if(/^image\//.test(mime)||/jpg|jpeg|png|gif|webp|bmp|svg|avif/.test(e)) return 'image';
-  if(/^video\//.test(mime)||/mp4|mov|avi|mkv|webm|flv|m4v/.test(e)) return 'video';
-  if(mime==='application/pdf'||e==='pdf') return 'pdf';
-  if(/^audio\//.test(mime)||/mp3|wav|flac|ogg|aac|m4a/.test(e)) return 'audio';
-  if(/doc|docx|xls|xlsx|ppt|pptx|txt|md|csv|rtf/.test(e)) return 'document';
-  if(/zip|rar|7z|tar|gz|bz2/.test(e)) return 'archive';
-  return 'other';
-}
-function ficon(t){ return {image:'🖼️',video:'🎬',pdf:'📕',audio:'🎵',document:'📝',archive:'🗜️',other:'📦'}[t]||'📦'; }
-function fcolor(t){ return {image:'c-img',video:'c-vid',pdf:'c-pdf',audio:'c-aud',document:'c-doc',archive:'c-zip',other:'c-oth'}[t]||'c-oth'; }
-
-// ── FILTER & RENDER ───────────────────
 function setCategory(cat,btn){
-  _setCategoryCore(cat);
+  category=cat;
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const labels={all:'All Files',image:'Photos',video:'Videos',pdf:'PDFs',audio:'Audio',document:'Documents',archive:'Archives'};
+  document.getElementById('cat-title').textContent=labels[cat]||'Files';
+  // sync mob nav
+  document.querySelectorAll('.mn-item').forEach(b=>b.classList.remove('active'));
+  const mn=document.getElementById('mn-'+cat);
+  if(mn) mn.classList.add('active');
+  applyFilter();
+}
+
+function mobileNav(cat,btn){
+  document.querySelectorAll('.mn-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // find sidebar btn
+  const sb=document.querySelector(`.sb-item[onclick*="'${cat}'"]`);
+  setCategory(cat,sb||null);
 }
 
 function doSearch(){ applyFilter(); }
 
 function applyFilter(){
-  const q=(document.getElementById('search-inp')?.value||'').toLowerCase();
+  const q=(document.getElementById('search-inp')?.value||'').toLowerCase().trim();
   filtered=files.filter(f=>{
     const mc=category==='all'||f.type===category;
     const mq=!q||f.name.toLowerCase().includes(q);
@@ -1274,41 +1541,49 @@ function applyFilter(){
 function render(){
   const area=document.getElementById('file-area');
   if(!filtered.length){
-    area.innerHTML=`<div class="empty"><div class="empty-icon">${files.length?'🔍':'☁️'}</div><h3>${files.length?'No files found':'No files yet'}</h3><p>${files.length?'Try a different search or category.':'Tap the Upload button to add your first file!'}</p></div>`;
+    area.innerHTML=`<div class="empty">
+      <div class="empty-ico">${files.length?'🔍':'☁️'}</div>
+      <h3>${files.length?'No matches':'No files yet'}</h3>
+      <p>${files.length?'Try a different search or filter.':'Upload your first file to get started!'}</p>
+    </div>`;
     return;
   }
-  if(view==='grid'){
-    area.innerHTML=`<div class="file-grid">${filtered.map(card).join('')}</div>`;
-  }else{
-    area.innerHTML=`<div class="file-list">${filtered.map(row).join('')}</div>`;
-  }
+  area.innerHTML= view==='grid'
+    ? `<div class="file-grid">${filtered.map(cardHTML).join('')}</div>`
+    : `<div class="file-list">${filtered.map(rowHTML).join('')}</div>`;
 }
 
-function card(f){
-  const ic=ficon(f.type), cl=fcolor(f.type);
-  const thumb=f.type==='image'&&f.thumb?`<img src="${f.thumb}" loading="lazy" onerror="this.remove()" alt="">`:'';
-  return `<div class="file-card" ondblclick="openFile(${f.msg_id})" onclick="openFile(${f.msg_id})">
-    <div class="fc-thumb">${thumb}<span class="fc-icon ${cl}">${ic}</span></div>
+function cardHTML(f){
+  const ic=fi(f.type),cl=fc(f.type);
+  const thumb=f.type==='image'&&f.thumb?`<img src="${esc(f.thumb)}" loading="lazy" onerror="this.remove()" alt="">` :'';
+  const chunkBadge=f.chunked?`<div class="chunk-badge">${f.totalChunks}p</div>`:'';
+  return `<div class="file-card" onclick="openFile(${f.msg_id})">
+    <div class="fc-thumb">
+      ${thumb}
+      <span class="fc-type-icon ${cl}">${ic}</span>
+      ${chunkBadge}
+      <div class="fc-overlay">
+        <button class="fc-ov-btn" onclick="event.stopPropagation();openFile(${f.msg_id})" title="View">👁</button>
+        <button class="fc-ov-btn" onclick="event.stopPropagation();dlFile(${f.msg_id})" title="Save">⬇</button>
+        <button class="fc-ov-btn del" onclick="event.stopPropagation();rmFile(${f.msg_id})" title="Delete">🗑</button>
+      </div>
+    </div>
     <div class="fc-body">
       <div class="fc-name" title="${esc(f.name)}">${esc(f.name)}</div>
       <div class="fc-meta">${fmtSz(f.size)} · ${fmtDt(f.date)}</div>
     </div>
-    <div class="fc-actions">
-      <button class="fca" onclick="event.stopPropagation();dlFile(${f.msg_id})" title="Download">⬇</button>
-      <button class="fca del" onclick="event.stopPropagation();rmFile(${f.msg_id})" title="Delete">🗑</button>
-    </div>
   </div>`;
 }
 
-function row(f){
-  const ic=ficon(f.type), cl=fcolor(f.type);
+function rowHTML(f){
+  const ic=fi(f.type),cl=fc(f.type);
   return `<div class="file-row" onclick="openFile(${f.msg_id})">
     <span class="fr-icon ${cl}">${ic}</span>
-    <span class="fr-name" title="${esc(f.name)}">${esc(f.name)}</span>
+    <span class="fr-name" title="${esc(f.name)}">${esc(f.name)}${f.chunked?` <span style="font-size:.65rem;color:var(--c-blue)">(${f.totalChunks} parts)</span>`:''}</span>
     <div class="fr-meta"><span>${fmtSz(f.size)}</span><span>${fmtDt(f.date)}</span></div>
-    <div class="fr-actions">
-      <button class="fca" onclick="event.stopPropagation();dlFile(${f.msg_id})" title="Download">⬇</button>
-      <button class="fca del" onclick="event.stopPropagation();rmFile(${f.msg_id})" title="Delete">🗑</button>
+    <div class="fr-acts">
+      <button class="fr-btn" onclick="event.stopPropagation();dlFile(${f.msg_id})" title="Save">⬇</button>
+      <button class="fr-btn del" onclick="event.stopPropagation();rmFile(${f.msg_id})" title="Delete">🗑</button>
     </div>
   </div>`;
 }
@@ -1325,546 +1600,531 @@ function updateCounts(){
   document.getElementById('cnt-all').textContent=files.length;
   types.forEach(t=>{ const el=document.getElementById('cnt-'+t); if(el) el.textContent=files.filter(f=>f.type===t).length; });
   const tot=files.reduce((s,f)=>s+(f.size||0),0);
-  document.getElementById('sb-info').textContent=`${files.length} files · ${fmtSz(tot)}`;
+  document.getElementById('sb-stats').textContent=`${files.length} files · ${fmtSz(tot)}`;
 }
 
-// ── UPLOAD ────────────────────────────
-function openDrop(){ document.getElementById('drop-panel').style.display='block'; }
-function closeDrop(){ document.getElementById('drop-panel').style.display='none'; }
+// ═══════════════════════════════════════
+// UPLOAD — FIXED CHUNKED SYSTEM
+// ═══════════════════════════════════════
+function openUpload(){
+  document.getElementById('upload-sheet').classList.add('open');
+  // Setup drag on overlay backdrop
+  if(!document._uOverlay){
+    document._uOverlay = true;
+    document.addEventListener('dragover',e=>{ e.preventDefault(); document.getElementById('upload-sheet').classList.add('open'); });
+  }
+}
+function closeUpload(){ document.getElementById('upload-sheet').classList.remove('open'); }
 
-function setupDrag(){
-  const z=document.getElementById('dp-zone');
-  z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('drag');});
-  z.addEventListener('dragleave',()=>z.classList.remove('drag'));
-  z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('drag');onFilePick(e.dataTransfer.files);});
-  document.body.addEventListener('dragover',e=>{e.preventDefault();openDrop();});
+function setupDragDrop(){
+  const dz=document.getElementById('us-drop');
+  dz.addEventListener('dragover',e=>{ e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+  dz.addEventListener('drop',e=>{ e.preventDefault(); dz.classList.remove('drag'); onFilePick(e.dataTransfer.files); });
 }
 
-function onFilePick(fs){ [...fs].forEach(upload); }
+function onFilePick(fs){ openUpload(); [...fs].forEach(uploadFile); }
 
-const CHUNK = 45 * 1024 * 1024; // 45 MB per chunk (safe under 50MB bot limit)
-
-async function upload(file){
-  const needsSplit = file.size > CHUNK;
-  const id = 'u'+Date.now()+Math.random().toString(36).slice(2);
-  const list = document.getElementById('dp-list');
-  const totalChunks = needsSplit ? Math.ceil(file.size / CHUNK) : 1;
+async function uploadFile(file){
+  const needsSplit = file.size > CHUNK_SIZE;
+  const totalChunks = needsSplit ? Math.ceil(file.size / CHUNK_SIZE) : 1;
+  const uid = 'up_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  const list = document.getElementById('us-list');
+  const t = ftype(file.name, file.type||'');
 
   list.insertAdjacentHTML('beforeend',`
-    <div id="${id}" class="dp-item">
-      <span>${ficon(ftype(file.name,file.type))}</span>
-      <div style="flex:1;min-width:0;">
-        <div class="dp-item-name">${esc(file.name)} ${needsSplit?`<span style="font-size:.65rem;color:var(--tg);background:var(--tg-light);padding:1px 6px;border-radius:4px;margin-left:4px;">${totalChunks} parts</span>`:''}</div>
-        <div style="font-size:.65rem;color:var(--muted);margin-bottom:3px;" id="${id}lbl">${needsSplit?'Splitting & uploading…':'Uploading…'}</div>
-        <div class="dp-bar"><div class="dp-fill" id="${id}p" style="width:3%"></div></div>
+    <div id="${uid}" class="up-item">
+      <span class="up-item-icon ${fc(t)}">${fi(t)}</span>
+      <div class="up-item-info">
+        <div class="up-item-name">${esc(file.name)}</div>
+        <div class="up-item-sub" id="${uid}_sub">${needsSplit?`Splitting into ${totalChunks} parts…`:'Uploading…'}</div>
+        <div class="up-pbar"><div class="up-pfill" id="${uid}_bar" style="width:3%"></div></div>
       </div>
-      <span class="dp-status" id="${id}s">${needsSplit?'0/'+totalChunks:'…'}</span>
+      <span class="up-status" id="${uid}_st">${needsSplit?`0/${totalChunks}`:'…'}</span>
     </div>`);
 
+  const setProgress=(pct,sub,st)=>{
+    const b=document.getElementById(uid+'_bar');
+    const s=document.getElementById(uid+'_sub');
+    const x=document.getElementById(uid+'_st');
+    if(b) b.style.width=pct+'%';
+    if(s&&sub) s.textContent=sub;
+    if(x&&st!==undefined) x.textContent=st;
+  };
+
   try{
-    const t = ftype(file.name, file.type);
-    let thumb = null;
-    if(t==='image' && file.size < 3*1024*1024) thumb = await readDU(file);
+    let thumb=null;
+    if(t==='image'&&file.size<4*1024*1024) thumb=await readDataURL(file);
 
     if(!needsSplit){
-      // ── Single file upload (under 45MB) ──
-      const r = await TG.sendDoc(file);
-      if(!r.ok) throw new Error(r.description);
-      document.getElementById(id+'p').style.width='100%';
-      document.getElementById(id+'s').textContent='✓';
-      const doc = r.result.document;
-      const entry = {
-        msg_id: r.result.message_id, file_id: doc.file_id,
-        name: file.name, size: file.size,
-        mime: file.type||doc?.mime_type||'', type: t,
-        date: Date.now(), thumb, chunked: false
+      // ── Single upload ──
+      const fd=new FormData();
+      fd.append('chat_id',CHAT);
+      fd.append('document',file,file.name);
+      fd.append('caption',`TS1|${file.name}|${file.type||''}|${file.size}`);
+      const r=await TG.sendDoc(fd);
+      if(!r.ok) throw new Error(r.description||'Upload failed');
+      setProgress(100,'Done','✓');
+      const doc=r.result.document;
+      const entry={
+        msg_id:r.result.message_id, file_id:doc.file_id,
+        name:file.name, size:file.size,
+        mime:file.type||doc.mime_type||'', type:t,
+        date:Date.now(), thumb, chunked:false
       };
-      addIdx(entry); files.unshift(entry);
+      addToIdx(entry); files.unshift(entry);
+
     } else {
-      // ── Chunked upload (over 45MB) ──
-      const chunkIds = []; // store msg_id + file_id for each chunk
-      for(let i=0; i<totalChunks; i++){
-        const start = i * CHUNK;
-        const end   = Math.min(start + CHUNK, file.size);
-        const blob  = file.slice(start, end);
-        // Name each chunk: filename.part001, filename.part002 …
-        const partNum = String(i+1).padStart(3,'0');
-        const chunkFile = new File([blob], `${file.name}.part${partNum}`, {type:'application/octet-stream'});
+      // ── Chunked upload ──
+      const chunks=[];
+      for(let i=0;i<totalChunks;i++){
+        const start=i*CHUNK_SIZE;
+        const end=Math.min(start+CHUNK_SIZE, file.size);
+        const blob=file.slice(start,end);
+        const partName=`${file.name}.tsp${String(i).padStart(4,'0')}`;
+        const chunkFile=new File([blob],partName,{type:'application/octet-stream'});
 
-        // Caption carries metadata for reassembly
-        const caption = `TSCHUNK|${file.name}|${file.type||''}|${file.size}|${i}|${totalChunks}`;
-        const fd = new FormData();
-        fd.append('chat_id', CHAT);
-        fd.append('document', chunkFile, chunkFile.name);
-        fd.append('caption', caption);
+        // Caption encodes all metadata needed for reassembly
+        const cap=`TSC|${file.name}|${file.type||''}|${file.size}|${i}|${totalChunks}`;
+        const fd=new FormData();
+        fd.append('chat_id',CHAT);
+        fd.append('document',chunkFile,partName);
+        fd.append('caption',cap);
 
-        const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendDocument`,{method:'POST',body:fd}).then(x=>x.json());
-        if(!r.ok) throw new Error(`Part ${i+1} failed: ${r.description}`);
+        const r=await TG.sendDoc(fd);
+        if(!r.ok) throw new Error(`Part ${i+1} upload failed: ${r.description}`);
 
-        chunkIds.push({ msg_id: r.result.message_id, file_id: r.result.document.file_id });
+        chunks.push({idx:i, msg_id:r.result.message_id, file_id:r.result.document.file_id});
 
-        // Update progress
-        const pct = Math.round(((i+1)/totalChunks)*100);
-        document.getElementById(id+'p').style.width = pct+'%';
-        document.getElementById(id+'s').textContent = (i+1)+'/'+totalChunks;
-        document.getElementById(id+'lbl').textContent = `Uploading part ${i+1} of ${totalChunks}…`;
+        const pct=Math.round(((i+1)/totalChunks)*100);
+        setProgress(pct,`Part ${i+1}/${totalChunks} uploaded…`,`${i+1}/${totalChunks}`);
+        // Small delay to avoid rate limiting
+        if(i < totalChunks-1) await delay(300);
       }
+      setProgress(100,`All ${totalChunks} parts uploaded!`,'✓');
 
-      // Store as a single "chunked" entry in index
-      const entry = {
-        msg_id: chunkIds[0].msg_id,   // use first chunk's msg_id as ID
-        file_id: chunkIds[0].file_id,
-        name: file.name, size: file.size,
-        mime: file.type||'', type: t,
-        date: Date.now(), thumb,
-        chunked: true, chunks: chunkIds, totalChunks
+      const entry={
+        msg_id:chunks[0].msg_id, file_id:chunks[0].file_id,
+        name:file.name, size:file.size,
+        mime:file.type||'', type:t,
+        date:Date.now(), thumb,
+        chunked:true, chunks, totalChunks
       };
-      addIdx(entry); files.unshift(entry);
-      document.getElementById(id+'s').textContent='✓';
-      document.getElementById(id+'lbl').textContent=`All ${totalChunks} parts uploaded!`;
+      addToIdx(entry); files.unshift(entry);
     }
 
     applyFilter(); updateCounts();
-    toast(file.name+' uploaded!','ok');
-    setTimeout(()=>document.getElementById(id)?.remove(), 3000);
+    toast(`${file.name} uploaded!`,'ok');
+    setTimeout(()=>document.getElementById(uid)?.remove(),3500);
 
   }catch(e){
-    document.getElementById(id+'s').textContent='✗';
-    document.getElementById(id+'p').style.background='var(--red)';
-    document.getElementById(id+'lbl').textContent='Failed!';
+    setProgress(100,'Failed ✗','✗');
+    document.getElementById(uid+'_bar').style.background='var(--c-red)';
     toast('Upload failed: '+e.message,'err');
   }
 }
 
-function readDU(f){ return new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(f); }); }
+function readDataURL(f){ return new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(f); }); }
 
-// ── CHUNKED DOWNLOAD & REASSEMBLE ────
-async function downloadChunked(f){
-  const body = document.getElementById('m-body');
-
-  // Show reassembly progress UI
-  body.innerHTML=`
-    <div style="text-align:center;padding:2rem;width:100%;">
-      <div style="font-size:3rem;margin-bottom:1rem;">🔧</div>
-      <div style="font-weight:900;font-size:1rem;margin-bottom:.5rem;">${esc(f.name)}</div>
-      <div style="color:var(--muted);font-size:.82rem;margin-bottom:1.2rem;">Reassembling ${f.totalChunks} parts… please wait</div>
-      <div style="background:var(--border);border-radius:8px;height:8px;overflow:hidden;max-width:320px;margin:0 auto 1rem;">
-        <div id="reassemble-bar" style="height:100%;background:linear-gradient(90deg,var(--tg),var(--green));border-radius:8px;width:0%;transition:width .3s;"></div>
-      </div>
-      <div id="reassemble-lbl" style="font-size:.78rem;color:var(--muted);font-weight:700;">Fetching part 1 of ${f.totalChunks}…</div>
-    </div>`;
-
-  try{
-    const buffers = [];
-    for(let i=0; i<f.chunks.length; i++){
-      document.getElementById('reassemble-lbl').textContent=`Fetching part ${i+1} of ${f.totalChunks}…`;
-      const url = await TG.link(f.chunks[i].file_id);
-      if(!url) throw new Error(`Cannot get part ${i+1}`);
-      const res = await fetch(url);
-      if(!res.ok) throw new Error(`Download failed for part ${i+1}`);
-      const buf = await res.arrayBuffer();
-      buffers.push(buf);
-      const pct = Math.round(((i+1)/f.chunks.length)*100);
-      document.getElementById('reassemble-bar').style.width = pct+'%';
-    }
-
-    // Merge all ArrayBuffers into one Blob
-    document.getElementById('reassemble-lbl').textContent='Merging parts…';
-    const merged = new Blob(buffers, {type: f.mime||'application/octet-stream'});
-    const dlUrl  = URL.createObjectURL(merged);
-
-    // Trigger download
-    const a = document.createElement('a');
-    a.href = dlUrl;
-    a.download = f.name;
-    a.click();
-    setTimeout(()=>URL.revokeObjectURL(dlUrl), 5000);
-
-    body.innerHTML=`
-      <div style="text-align:center;padding:2rem;">
-        <div style="font-size:3rem;margin-bottom:1rem;">✅</div>
-        <div style="font-weight:900;color:var(--green);">Download started!</div>
-        <div style="font-size:.82rem;color:var(--muted);margin-top:.5rem;">${esc(f.name)} · ${fmtSz(f.size)}</div>
-      </div>`;
-    toast(f.name+' downloaded!','ok');
-  }catch(e){
-    body.innerHTML=`<div style="text-align:center;color:var(--red);padding:2rem;font-weight:700;">❌ ${e.message}</div>`;
-    toast('Reassembly failed: '+e.message,'err');
-  }
-}
-
-// ── OPEN / VIEW ───────────────────────
+// ═══════════════════════════════════════
+// OPEN / VIEW
+// ═══════════════════════════════════════
 async function openFile(id){
-  const f=files.find(x=>x.msg_id==id);
+  const f=files.find(x=>String(x.msg_id)===String(id));
   if(!f) return;
   curFile=f;
   document.getElementById('m-title').textContent=f.name;
-  document.getElementById('m-meta').textContent=`${fmtSz(f.size)} · ${f.type} · ${fmtDt(f.date,true)}`;
-  document.getElementById('m-body').innerHTML='<div class="spin"></div>';
-  document.getElementById('modal-bg').style.display='block';
+  document.getElementById('m-meta').textContent=`${fmtSz(f.size)} · ${f.type}${f.chunked?` · ${f.totalChunks} parts`:''} · ${fmtDt(f.date,true)}`;
+  document.getElementById('m-body').innerHTML='<div class="spin-center"><div class="spinner"></div></div>';
+  document.getElementById('modal-wrap').classList.add('open');
+
+  // Handle chunked files differently — only show download option
+  if(f.chunked){
+    document.getElementById('m-body').innerHTML=`
+      <div style="text-align:center;padding:2.5rem 1.5rem;">
+        <div style="font-size:3.5rem;margin-bottom:1rem;">${fi(f.type)}</div>
+        <div style="font-weight:800;font-size:1rem;margin-bottom:.5rem;">${esc(f.name)}</div>
+        <div style="font-size:.82rem;color:var(--c-text3);margin-bottom:.3rem;">${fmtSz(f.size)} · ${f.totalChunks} parts</div>
+        <div style="font-size:.78rem;color:var(--c-text3);margin-bottom:1.5rem;">This file was split into ${f.totalChunks} parts for upload.<br>Download will reassemble them automatically.</div>
+        <button onclick="downloadChunked(curFile)" style="padding:12px 28px;background:var(--grad-main);color:#fff;font-weight:700;font-size:.9rem;border:none;border-radius:var(--r-md);cursor:pointer;box-shadow:0 6px 20px rgba(59,130,246,.3);">⬇ Download & Reassemble</button>
+      </div>`;
+    document.getElementById('m-dl-btn').onclick=()=>downloadChunked(f);
+    return;
+  }
 
   try{
-    const url=await TG.link(f.file_id);
-    if(!url) throw new Error('Cannot get file link');
+    const url=await TG.getLink(f.file_id);
+    if(!url) throw new Error('Could not get file link');
+
     let html='';
     if(f.type==='image'){
       html=`<img src="${url}" alt="${esc(f.name)}">`;
-    }else if(f.type==='video'){
-      html=`<video controls autoplay style="max-width:100%;max-height:70vh;border-radius:12px;outline:none;"><source src="${url}">Your browser can't play this video.</video>`;
-    }else if(f.type==='audio'){
-      html=`<div style="text-align:center;padding:2rem;">
+    } else if(f.type==='video'){
+      html=`<video controls autoplay style="max-width:100%;max-height:72vh;border-radius:var(--r-md);outline:none;"><source src="${url}">Cannot play this video.</video>`;
+    } else if(f.type==='audio'){
+      html=`<div style="text-align:center;padding:2.5rem;width:100%;">
         <div style="font-size:4rem;margin-bottom:1rem;">🎵</div>
-        <div style="font-weight:900;font-size:1.1rem;margin-bottom:1.5rem;">${esc(f.name)}</div>
-        <audio controls autoplay style="width:100%;max-width:420px;outline:none;"><source src="${url}"></audio>
+        <div style="font-weight:800;font-size:1rem;margin-bottom:1.5rem;">${esc(f.name)}</div>
+        <audio controls autoplay style="width:100%;max-width:440px;outline:none;"><source src="${url}"></audio>
       </div>`;
-    }else if(f.type==='pdf'){
-      html=`<iframe src="https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}" style="width:100%;height:70vh;border:none;border-radius:12px;" title="${esc(f.name)}"></iframe>`;
-    }else{
+    } else if(f.type==='pdf'){
+      html=`<iframe src="https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}" style="width:100%;height:72vh;border:none;border-radius:var(--r-md);" title="${esc(f.name)}"></iframe>`;
+    } else {
       html=`<div style="text-align:center;padding:3rem;">
-        <div style="font-size:4rem;margin-bottom:1rem;">${ficon(f.type)}</div>
-        <div style="font-weight:900;font-size:1rem;margin-bottom:.5rem;">${esc(f.name)}</div>
-        <div style="color:var(--muted);font-size:.85rem;margin-bottom:1.5rem;">${fmtSz(f.size)}</div>
-        <a href="${url}" download="${esc(f.name)}" target="_blank" class="mbtn mbtn-primary" style="text-decoration:none;display:inline-block;">⬇ Download File</a>
+        <div style="font-size:4rem;margin-bottom:1rem;">${fi(f.type)}</div>
+        <div style="font-weight:800;font-size:1rem;margin-bottom:.5rem;">${esc(f.name)}</div>
+        <div style="font-size:.85rem;color:var(--c-text3);margin-bottom:1.5rem;">${fmtSz(f.size)}</div>
+        <a href="${url}" download="${esc(f.name)}" target="_blank" style="padding:12px 28px;background:var(--grad-main);color:#fff;font-weight:700;font-size:.9rem;border-radius:var(--r-md);text-decoration:none;display:inline-block;">⬇ Download</a>
       </div>`;
     }
+
     document.getElementById('m-body').innerHTML=html;
-    document.getElementById('m-dl').onclick=()=>{ const a=document.createElement('a'); a.href=url; a.download=f.name; a.target='_blank'; a.click(); };
+    document.getElementById('m-dl-btn').onclick=()=>{
+      const a=document.createElement('a'); a.href=url; a.download=f.name; a.target='_blank'; a.click();
+    };
   }catch(e){
-    document.getElementById('m-body').innerHTML=`<div style="text-align:center;color:var(--red);padding:2rem;font-weight:700;">❌ ${e.message}</div>`;
+    document.getElementById('m-body').innerHTML=`<div style="text-align:center;color:var(--c-red);padding:2rem;font-weight:700;">❌ ${esc(e.message)}</div>`;
   }
 }
 
 function closeModal(){
-  document.getElementById('modal-bg').style.display='none';
+  document.getElementById('modal-wrap').classList.remove('open');
   document.getElementById('m-body').innerHTML='';
   curFile=null;
 }
+function modalBgClick(e){ if(e.target.id==='modal-wrap') closeModal(); }
+function openInTelegram(){ if(curFile) window.open(`https://t.me/c/${CHAT.replace('-100','')}/${curFile.msg_id}`,'_blank'); }
 
-function bgClick(e){ if(e.target===document.getElementById('modal-bg').firstElementChild) return; if(e.target.id==='modal-bg') closeModal(); }
-
-function dlCurrent(){ if(curFile) dlFile(curFile.msg_id); }
-
+// ═══════════════════════════════════════
+// DOWNLOAD
+// ═══════════════════════════════════════
 async function dlFile(id){
-  const f=files.find(x=>x.msg_id==id);
+  const f=files.find(x=>String(x.msg_id)===String(id));
   if(!f) return;
-  toast('Getting download link…','info');
-  const url=await TG.link(f.file_id);
+  if(f.chunked){ openFile(id); return; }
+  toast('Getting link…','info');
+  const url=await TG.getLink(f.file_id);
   if(url){ const a=document.createElement('a'); a.href=url; a.download=f.name; a.target='_blank'; a.click(); }
-  else toast('Could not get link','err');
+  else toast('Could not get download link','err');
 }
 
-function openTG(){
-  if(!curFile) return;
-  window.open(`https://t.me/c/${CHAT.replace('-100','')}/${curFile.msg_id}`,'_blank');
-}
+// ── CHUNKED REASSEMBLE (FIXED) ──
+async function downloadChunked(f){
+  if(!f||!f.chunked||!f.chunks?.length){ toast('Invalid chunked file','err'); return; }
 
-async function rmFile(id){
-  const f=files.find(x=>x.msg_id==id);
-  if(!f||!confirm(`Delete "${f.name}"?`)) return;
-  try{ await TG.del(f.msg_id); }catch{}
-  delIdx(f.msg_id);
-  files=files.filter(x=>x.msg_id!=id);
-  applyFilter();
-  updateCounts();
-  toast(f.name+' deleted','warn');
-}
-
-// ── UTILS ─────────────────────────────
-function fmtSz(b){ if(!b) return '—'; const u=['B','KB','MB','GB']; let i=0,n=b; while(n>=1024&&i<u.length-1){n/=1024;i++;} return n.toFixed(1)+' '+u[i]; }
-function fmtDt(ts,long=false){ if(!ts) return '—'; const d=new Date(ts); if(long) return d.toLocaleString(); const diff=Date.now()-ts; if(diff<60000) return 'just now'; if(diff<3600000) return Math.floor(diff/60000)+'m ago'; if(diff<86400000) return Math.floor(diff/3600000)+'h ago'; return d.toLocaleDateString(); }
-function esc(s=''){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
-function toast(msg,type='info'){
-  const c=document.getElementById('toasts');
-  const t=document.createElement('div');
-  t.className='toast '+type;
-  const icons={ok:'✓',err:'✗',warn:'⚠',info:'ℹ'};
-  t.innerHTML=`${icons[type]||'ℹ'} ${msg}`;
-  c.appendChild(t);
-  setTimeout(()=>{t.style.opacity='0';t.style.transform='scale(.9)';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3000);
-}
-
-// ── MOBILE NAV (fixed — no recursive override) ────
-function mobileNav(cat, btn){
-  document.querySelectorAll('.mn-item').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  // directly call core logic without triggering override loop
-  _setCategoryCore(cat);
-}
-
-function _setCategoryCore(cat){
-  category = cat;
-  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
-  const sideBtn = document.querySelector(`.sb-item[onclick*="'${cat}'"]`);
-  if(sideBtn) sideBtn.classList.add('active');
-  const labels={all:'All Files',image:'Photos',video:'Videos',pdf:'PDFs',audio:'Audio',document:'Documents',archive:'Archives'};
-  document.getElementById('cat-title').textContent = labels[cat]||'Files';
-  applyFilter();
-  // sync mobile nav dot
-  document.querySelectorAll('.mn-item').forEach(b=>b.classList.remove('active'));
-  const mn = document.getElementById('mn-'+cat);
-  if(mn) mn.classList.add('active');
-}
-
-// ── SYNC FROM TELEGRAM ────────────────
-// Bot API has NO history endpoint. The only way to read past messages
-// is to probe message IDs using forwardMessage (we forward to same chat,
-// check if document exists, then delete the forwarded copy).
-// We track the highest known msg_id and scan upward for new ones.
-let syncing = false;
-
-async function syncFromTelegram(){
-  if(syncing){ toast('Sync already running…','info'); return; }
-  syncing = true;
-  const btn = document.getElementById('sync-btn');
-  if(btn){ btn.style.animation='spin .7s linear infinite'; btn.disabled=true; }
-
-  // Show sync progress modal
-  const overlay = document.createElement('div');
-  overlay.id = 'sync-overlay';
-  overlay.style.cssText=`position:fixed;inset:0;background:rgba(15,20,40,.6);backdrop-filter:blur(8px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:1.5rem;`;
+  const overlay=document.createElement('div');
+  overlay.className='overlay';
   overlay.innerHTML=`
-    <div style="background:var(--white);border-radius:24px;padding:2rem;max-width:360px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.3);text-align:center;">
-      <div style="font-size:2.5rem;margin-bottom:.8rem;">🔄</div>
-      <div style="font-weight:900;font-size:1.1rem;margin-bottom:.4rem;">Syncing Files</div>
-      <div id="sync-lbl" style="font-size:.82rem;color:var(--muted);margin-bottom:1.2rem;">Scanning your Telegram storage…</div>
-      <div style="background:var(--border);border-radius:8px;height:8px;overflow:hidden;margin-bottom:.8rem;">
-        <div id="sync-bar" style="height:100%;background:linear-gradient(90deg,var(--tg),var(--green));border-radius:8px;width:0%;transition:width .3s;"></div>
-      </div>
-      <div id="sync-count" style="font-size:.75rem;color:var(--muted);font-weight:700;">0 files found</div>
+    <div class="overlay-card">
+      <div class="ov-icon">🔧</div>
+      <div class="ov-title">Reassembling File</div>
+      <div class="ov-sub" id="ov-sub">Fetching part 1 of ${f.totalChunks}…</div>
+      <div class="ov-bar"><div class="ov-fill" id="ov-fill" style="width:0%"></div></div>
+      <div class="ov-count" id="ov-count">0 / ${f.totalChunks} parts</div>
     </div>`;
   document.body.appendChild(overlay);
 
-  function setLbl(t){ const el=document.getElementById('sync-lbl'); if(el) el.textContent=t; }
-  function setBar(p){ const el=document.getElementById('sync-bar'); if(el) el.style.width=p+'%'; }
-  function setCount(n){ const el=document.getElementById('sync-count'); if(el) el.textContent=n+' file'+(n!==1?'s':'')+' found'; }
+  const setSub  =t=>{ const el=document.getElementById('ov-sub');   if(el) el.textContent=t; };
+  const setFill =p=>{ const el=document.getElementById('ov-fill');  if(el) el.style.width=p+'%'; };
+  const setCount=(a,b)=>{ const el=document.getElementById('ov-count'); if(el) el.textContent=`${a} / ${b} parts`; };
 
   try{
-    const existing = new Set(idx().map(f=>String(f.msg_id)));
-    let imported = 0;
-    const chunkGroups = {}; // group TSCHUNK parts by filename+totalChunks
+    // Sort chunks by index to ensure correct order
+    const sortedChunks=[...f.chunks].sort((a,b)=>(a.idx??a.msg_id)-(b.idx??b.msg_id));
+    const buffers=[];
 
-    // ── STEP 1: getUpdates to catch any recent messages not yet indexed ──
-    setLbl('Checking recent messages…'); setBar(10);
-    const upd = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?limit=100&allowed_updates=["message","channel_post"]`).then(x=>x.json());
+    for(let i=0;i<sortedChunks.length;i++){
+      const chunk=sortedChunks[i];
+      setSub(`Fetching part ${i+1} of ${sortedChunks.length}…`);
 
-    const recentMsgs = [];
-    if(upd.ok){
-      for(const u of upd.result){
-        const msg = u.message || u.channel_post;
-        if(msg && String(msg.chat?.id)===String(CHAT)) recentMsgs.push(msg);
-      }
+      const url=await TG.getLink(chunk.file_id);
+      if(!url) throw new Error(`Cannot get link for part ${i+1}`);
+
+      const res=await fetch(url);
+      if(!res.ok) throw new Error(`Download failed for part ${i+1} (HTTP ${res.status})`);
+
+      const buf=await res.arrayBuffer();
+      if(buf.byteLength===0) throw new Error(`Part ${i+1} is empty`);
+      buffers.push(buf);
+
+      const pct=Math.round(((i+1)/sortedChunks.length)*100);
+      setFill(pct); setCount(i+1,sortedChunks.length);
     }
 
-    // ── STEP 2: Scan by probing message IDs via forwardMessage ──
-    // Find highest known msg_id in our index
-    const allIds = idx().map(f=>f.msg_id);
-    const knownMax = allIds.length ? Math.max(...allIds) : 0;
+    setSub('Merging all parts…'); setFill(99);
 
-    // We'll scan from knownMax+1 upward to find new files
-    // AND scan backward from knownMax to find old files we missed (first sync)
-    const firstSync = allIds.length === 0;
+    // Merge buffers
+    const totalBytes=buffers.reduce((s,b)=>s+b.byteLength,0);
+    const merged=new Uint8Array(totalBytes);
+    let offset=0;
+    for(const buf of buffers){
+      merged.set(new Uint8Array(buf),offset);
+      offset+=buf.byteLength;
+    }
 
-    setLbl(firstSync ? 'First sync — scanning all messages…' : 'Looking for new files…');
-    setBar(20);
+    const blob=new Blob([merged],{type:f.mime||'application/octet-stream'});
+    const dlUrl=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=dlUrl; a.download=f.name; a.click();
+    setTimeout(()=>URL.revokeObjectURL(dlUrl),10000);
 
-    // Probe a range of message IDs
-    // Forward each ID to same chat, check if it has a document, then delete
-    async function probeMsg(msgId){
+    setFill(100); setSub('Done! Download started.');
+    setTimeout(()=>overlay.remove(),1500);
+    toast(`${f.name} downloaded!`,'ok');
+    closeModal();
+
+  }catch(e){
+    overlay.remove();
+    toast('Reassembly failed: '+e.message,'err');
+    document.getElementById('m-body').innerHTML=`<div style="text-align:center;color:var(--c-red);padding:2rem;font-weight:700;">❌ ${esc(e.message)}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════
+// DELETE
+// ═══════════════════════════════════════
+async function rmFile(id){
+  const f=files.find(x=>String(x.msg_id)===String(id));
+  if(!f||!confirm(`Delete "${f.name}"?`)) return;
+  // Delete all chunks from Telegram
+  const toDelete=[{msg_id:f.msg_id}];
+  if(f.chunked&&f.chunks) f.chunks.forEach(c=>{ if(c.msg_id!==f.msg_id) toDelete.push(c); });
+  for(const c of toDelete){ try{ await TG.del(c.msg_id); }catch{} }
+  delFromIdx(f.msg_id);
+  files=files.filter(x=>String(x.msg_id)!==String(id));
+  applyFilter(); updateCounts();
+  toast(f.name+' deleted','warn');
+  if(curFile?.msg_id==id) closeModal();
+}
+
+// ═══════════════════════════════════════
+// SYNC FROM TELEGRAM
+// ═══════════════════════════════════════
+let syncing=false;
+async function syncFromTelegram(){
+  if(syncing){ toast('Sync already running…','info'); return; }
+  syncing=true;
+  const syncBtn=document.getElementById('sync-btn');
+  if(syncBtn) syncBtn.style.opacity='.5';
+
+  const overlay=document.createElement('div');
+  overlay.className='overlay';
+  overlay.innerHTML=`
+    <div class="overlay-card">
+      <div class="ov-icon">🔄</div>
+      <div class="ov-title">Syncing Storage</div>
+      <div class="ov-sub" id="ov-sub">Scanning your Telegram storage…</div>
+      <div class="ov-bar"><div class="ov-fill" id="ov-fill" style="width:5%"></div></div>
+      <div class="ov-count" id="ov-count">0 files found</div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const setSub  =t=>{ const el=document.getElementById('ov-sub');   if(el) el.textContent=t; };
+  const setFill =p=>{ const el=document.getElementById('ov-fill');  if(el) el.style.width=p+'%'; };
+  const setCount=n=>{ const el=document.getElementById('ov-count'); if(el) el.textContent=`${n} file${n!==1?'s':''} found`; };
+
+  try{
+    const existing=new Set(getIdx().map(f=>String(f.msg_id)));
+    let imported=0;
+    const chunkMap={}; // key=filename|totalChunks → {chunks:[]}
+
+    // Step 1: Check recent getUpdates
+    setSub('Checking recent messages…'); setFill(10);
+    const upd=await TG.get('getUpdates',{limit:100});
+    const recentMsgs=[];
+    if(upd.ok) for(const u of upd.result){
+      const msg=u.message||u.channel_post;
+      if(msg&&String(msg.chat?.id)===String(CHAT)) recentMsgs.push(msg);
+    }
+
+    // Step 2: Probe message IDs via forwardMessage
+    const allIds=getIdx().map(f=>f.msg_id);
+    const knownMax=allIds.length?Math.max(...allIds):0;
+    const firstSync=allIds.length===0;
+
+    setSub(firstSync?'First sync — scanning messages…':'Scanning for new files…');
+    setFill(15);
+
+    // Get approximate current msg ID
+    let approxMax=knownMax||1;
+    if(firstSync||!knownMax){
       try{
-        const r = await fetch(`https://api.telegram.org/bot${TOKEN}/forwardMessage`,{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ chat_id: CHAT, from_chat_id: CHAT, message_id: msgId })
-        }).then(x=>x.json());
-
-        if(!r.ok) return null; // message doesn't exist
-
-        const fwd = r.result;
-        // Delete the forwarded copy immediately
-        await fetch(`https://api.telegram.org/bot${TOKEN}/deleteMessage`,{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ chat_id: CHAT, message_id: fwd.message_id })
-        });
-
-        // Check if original had a document
-        if(fwd.document){
-          return { msg_id: msgId, doc: fwd.document, caption: fwd.caption||'', date: fwd.forward_date||fwd.date||0 };
+        const latest=await TG.get('getUpdates',{limit:1,offset:-1});
+        if(latest.ok&&latest.result.length){
+          const msg=latest.result[0].message||latest.result[0].channel_post;
+          if(msg) approxMax=msg.message_id;
         }
-        return null; // not a document message
-      }catch{ return null; }
+      }catch{}
     }
 
-    function parseEntry(msgId, doc, cap, date){
-      let name, mime, size;
-      if(cap.startsWith('TeleStore|')){
-        const p=cap.split('|'); name=p[1]; mime=p[2]; size=parseInt(p[3])||doc.file_size||0;
-      } else if(cap.startsWith('TSCHUNK|')){
+    const scanStart=firstSync?Math.max(1,approxMax-1500):knownMax+1;
+    const scanEnd  =firstSync?approxMax+5:knownMax+500;
+    const total=scanEnd-scanStart+1;
+    let done=0, emptyRun=0;
+
+    async function probeId(msgId){
+      if(existing.has(String(msgId))) return null;
+      try{
+        const r=await TG.post('forwardMessage',{chat_id:CHAT,from_chat_id:CHAT,message_id:msgId});
+        if(!r.ok) return null;
+        const fwd=r.result;
+        // Clean up forward immediately
+        await TG.post('deleteMessage',{chat_id:CHAT,message_id:fwd.message_id});
+        if(fwd.document) return {msg_id:msgId,doc:fwd.document,cap:fwd.caption||fwd.text||'',date:fwd.forward_date||fwd.date||0};
+      }catch{}
+      return null;
+    }
+
+    function parseResult(res){
+      const {msg_id,doc,cap,date}=res;
+      if(cap.startsWith('TS1|')){
         const p=cap.split('|');
-        // p: TSCHUNK|filename|mime|totalsize|chunkIndex|totalChunks
-        const fname=p[1], fmime=p[2], fsize=parseInt(p[3])||0, cidx=parseInt(p[4]), ctotal=parseInt(p[5]);
-        const key=fname+'||'+ctotal;
-        if(!chunkGroups[key]) chunkGroups[key]={name:fname,mime:fmime,size:fsize,total:ctotal,chunks:[],date:date*1000};
-        chunkGroups[key].chunks[cidx]={msg_id:msgId, file_id:doc.file_id};
-        return null; // will be assembled after all chunks found
-      } else {
-        name=doc.file_name||('file_'+msgId); mime=doc.mime_type||''; size=doc.file_size||0;
+        const name=p[1],mime=p[2]||'',size=parseInt(p[3])||doc.file_size||0;
+        return {msg_id,file_id:doc.file_id,name,size,mime,type:ftype(name,mime),date:date*1000,thumb:null,chunked:false};
       }
-      return { msg_id:msgId, file_id:doc.file_id, name, size, mime, type:ftype(name,mime), date:date*1000, thumb:null, chunked:false };
+      if(cap.startsWith('TSC|')){
+        const p=cap.split('|');
+        const name=p[1],mime=p[2]||'',size=parseInt(p[3])||0,cidx=parseInt(p[4]),ctotal=parseInt(p[5]);
+        const key=`${name}|${ctotal}`;
+        if(!chunkMap[key]) chunkMap[key]={name,mime,size,totalChunks:ctotal,chunks:[]};
+        chunkMap[key].chunks[cidx]={idx:cidx,msg_id,file_id:doc.file_id};
+        if(!chunkMap[key].firstDate||date<chunkMap[key].firstDate) chunkMap[key].firstDate=date;
+        return null;
+      }
+      // Unknown format — import as generic file
+      const name=doc.file_name||`file_${msg_id}`;
+      return {msg_id,file_id:doc.file_id,name,size:doc.file_size||0,mime:doc.mime_type||'',type:ftype(name,doc.mime_type||''),date:date*1000,thumb:null,chunked:false};
     }
 
-    // Determine scan range
-    // For first sync: scan last 2000 message IDs before current
-    // For subsequent: scan from knownMax+1 to knownMax+200
-    let scanStart, scanEnd;
-    if(firstSync){
-      // Get approximate current max ID by sending a probe
-      // Use getUpdates offset trick to get latest update_id
-      const latest = await TG.api('getUpdates',{limit:1,offset:-1});
-      let approxMax = 1;
-      if(latest.ok && latest.result.length){
-        const msg = latest.result[0].message || latest.result[0].channel_post;
-        if(msg) approxMax = msg.message_id;
-        else approxMax = latest.result[0].update_id;
-      }
-      scanStart = Math.max(1, approxMax - 2000);
-      scanEnd   = approxMax + 10;
-    } else {
-      scanStart = knownMax + 1;
-      scanEnd   = knownMax + 300;
-    }
+    // Scan in batches of 5
+    for(let i=scanStart;i<=scanEnd;i+=5){
+      const batch=[];
+      for(let j=i;j<Math.min(i+5,scanEnd+1);j++) batch.push(j);
+      const results=await Promise.all(batch.map(id=>probeId(id)));
 
-    setLbl(`Scanning messages ${scanStart}–${scanEnd}…`);
-
-    // Probe in parallel batches of 5 for speed
-    const BATCH = 5;
-    const total = scanEnd - scanStart + 1;
-    let done = 0; let emptyStreak = 0;
-
-    for(let i=scanStart; i<=scanEnd; i+=BATCH){
-      const batch = [];
-      for(let j=i; j<Math.min(i+BATCH, scanEnd+1); j++) batch.push(j);
-
-      const results = await Promise.all(batch.map(id => existing.has(String(id)) ? null : probeMsg(id)));
-
-      for(let k=0; k<results.length; k++){
-        const res = results[k];
-        const msgId = batch[k];
+      for(let k=0;k<results.length;k++){
         done++;
-
-        if(res){
-          emptyStreak = 0;
-          if(!existing.has(String(msgId))){
-            const entry = parseEntry(msgId, res.doc, res.caption, res.date);
-            if(entry){
-              addIdx(entry); existing.add(String(msgId));
-              files.unshift(entry); imported++;
-              setCount(imported);
-            }
+        if(results[k]){
+          emptyRun=0;
+          const entry=parseResult(results[k]);
+          if(entry&&!existing.has(String(entry.msg_id))){
+            addToIdx(entry); existing.add(String(entry.msg_id));
+            files.unshift(entry); imported++;
+            setCount(imported);
           }
-        } else {
-          emptyStreak++;
-        }
+        } else emptyRun++;
       }
-
-      const pct = 20 + Math.round((done/total)*70);
-      setBar(pct);
-      setLbl(`Scanned ${done}/${total} messages… ${imported} found`);
-
-      // If 100 consecutive empty IDs after first sync, stop early
-      if(!firstSync && emptyStreak > 100) break;
+      const pct=15+Math.round((done/total)*75);
+      setFill(Math.min(pct,90));
+      setSub(`Scanned ${done}/${total}… ${imported} found`);
+      if(!firstSync&&emptyRun>80) break;
+      await delay(50); // avoid rate limit
     }
 
-    // ── STEP 3: Assemble chunked files ──
-    setLbl('Assembling chunked files…'); setBar(95);
-    for(const key of Object.keys(chunkGroups)){
-      const g = chunkGroups[key];
-      if(g.chunks.filter(Boolean).length === g.total){
-        const firstChunk = g.chunks[0];
-        if(!existing.has(String(firstChunk.msg_id))){
-          const entry = {
-            msg_id: firstChunk.msg_id, file_id: firstChunk.file_id,
-            name: g.name, size: g.size, mime: g.mime,
-            type: ftype(g.name, g.mime), date: g.date, thumb: null,
-            chunked: true, chunks: g.chunks, totalChunks: g.total
+    // Process chunk groups
+    setSub('Assembling multi-part files…'); setFill(93);
+    for(const key of Object.keys(chunkMap)){
+      const g=chunkMap[key];
+      const filled=g.chunks.filter(Boolean);
+      if(filled.length===g.totalChunks){
+        const first=g.chunks[0];
+        if(first&&!existing.has(String(first.msg_id))){
+          const entry={
+            msg_id:first.msg_id, file_id:first.file_id,
+            name:g.name, size:g.size, mime:g.mime,
+            type:ftype(g.name,g.mime), date:(g.firstDate||0)*1000, thumb:null,
+            chunked:true, chunks:g.chunks.filter(Boolean), totalChunks:g.totalChunks
           };
-          addIdx(entry); files.unshift(entry); imported++;
+          addToIdx(entry); existing.add(String(first.msg_id));
+          files.unshift(entry); imported++;
         }
       }
     }
 
-    // ── Also process recent updates ──
+    // Process recent updates
     for(const msg of recentMsgs){
       if(!msg.document) continue;
-      const mid = String(msg.message_id);
+      const mid=String(msg.message_id);
       if(existing.has(mid)) continue;
-      const entry = parseEntry(msg.message_id, msg.document, msg.caption||'', msg.date||0);
-      if(entry){ addIdx(entry); existing.add(mid); files.unshift(entry); imported++; }
+      const res={msg_id:msg.message_id,doc:msg.document,cap:msg.caption||'',date:msg.date||0};
+      const entry=parseResult(res);
+      if(entry){ addToIdx(entry); existing.add(mid); files.unshift(entry); imported++; }
     }
 
-    setBar(100);
-    files = idx();
+    setFill(100); setSub('Sync complete!'); setCount(imported);
+    files=getIdx();
     applyFilter(); updateCounts();
-
-    setTimeout(()=>{ overlay.remove(); },500);
-    if(imported > 0) toast(`✓ Synced ${imported} new file${imported>1?'s':''}!`,'ok');
-    else toast('Already up to date ✓','ok');
+    setTimeout(()=>overlay.remove(),800);
+    toast(imported?`✓ ${imported} file${imported>1?'s':''} synced!`:'Already up to date ✓','ok');
 
   }catch(e){
     overlay.remove();
     toast('Sync error: '+e.message,'err');
-    console.error(e);
   }
-
-  syncing = false;
-  if(btn){ btn.style.animation=''; btn.disabled=false; }
+  syncing=false;
+  if(syncBtn) syncBtn.style.opacity='1';
 }
 
-// ── DISCONNECT SHORTCUT (top menu) ────
+// ═══════════════════════════════════════
+// ACCOUNT MENU
+// ═══════════════════════════════════════
 function showAccountMenu(){
-  const existing = document.getElementById('acct-menu');
+  const existing=document.getElementById('acct-menu');
   if(existing){ existing.remove(); return; }
-  const menu = document.createElement('div');
-  menu.id = 'acct-menu';
-  menu.style.cssText=`
-    position:fixed; top:60px; right:12px; z-index:500;
-    background:var(--white); border:2px solid var(--border);
-    border-radius:16px; box-shadow:var(--shadow-lg);
-    padding:8px; min-width:200px;
-    animation: popIn .2s cubic-bezier(.34,1.56,.64,1);
-  `;
-  menu.innerHTML=`
-    <div style="padding:10px 14px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;">
-      <div style="font-weight:900;font-size:.9rem;">${esc(USER_NAME||'My Storage')}</div>
-      <div style="font-size:.72rem;color:var(--muted);font-family:var(--mono);">@${esc(BOT_NAME||'bot')}</div>
+  const m=document.createElement('div');
+  m.id='acct-menu'; m.className='acct-menu';
+  m.innerHTML=`
+    <div class="am-header">
+      <div class="am-name">${esc(USER_NAME||'My Storage')}</div>
+      <div class="am-bot">${BOT_NAME?'@'+esc(BOT_NAME):''}</div>
     </div>
-    <button onclick="syncFromTelegram();document.getElementById('acct-menu')?.remove();"
-      style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border:none;background:none;font-family:var(--font);font-weight:700;font-size:.85rem;color:var(--text);cursor:pointer;border-radius:10px;transition:background .15s;"
-      onmouseover="this.style.background='var(--tg-light)'" onmouseout="this.style.background='none'">
-      🔄 Sync from Telegram
-    </button>
-    <button onclick="loadFiles();document.getElementById('acct-menu')?.remove();"
-      style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border:none;background:none;font-family:var(--font);font-weight:700;font-size:.85rem;color:var(--text);cursor:pointer;border-radius:10px;transition:background .15s;"
-      onmouseover="this.style.background='var(--tg-light)'" onmouseout="this.style.background='none'">
-      📁 Refresh Files
-    </button>
-    <div style="height:1px;background:var(--border);margin:6px 0;"></div>
-    <button onclick="disconnect();"
-      style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border:none;background:none;font-family:var(--font);font-weight:700;font-size:.85rem;color:var(--red);cursor:pointer;border-radius:10px;transition:background .15s;"
-      onmouseover="this.style.background='var(--red-light)'" onmouseout="this.style.background='none'">
-      ⏏️ Disconnect
-    </button>
-  `;
-  document.body.appendChild(menu);
-  // close on outside click
-  setTimeout(()=>document.addEventListener('click', function h(e){
-    if(!menu.contains(e.target)){ menu.remove(); document.removeEventListener('click',h); }
-  }),50);
+    <button class="am-item" onclick="syncFromTelegram();closeMenu()">🔄 Sync from Telegram</button>
+    <button class="am-item" onclick="loadFiles();closeMenu()">📁 Refresh Files</button>
+    <div class="am-sep"></div>
+    <button class="am-item danger" onclick="disconnect()">⏏ Disconnect</button>`;
+  document.body.appendChild(m);
+  window.closeMenu=()=>m.remove();
+  setTimeout(()=>document.addEventListener('click',function h(e){ if(!m.contains(e.target)){m.remove();document.removeEventListener('click',h);} },{ once:false }),50);
 }
 
-// ── KEYBOARD ──────────────────────────
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+function fmtSz(b){
+  if(!b&&b!==0) return '—';
+  const u=['B','KB','MB','GB']; let i=0,n=b;
+  while(n>=1024&&i<u.length-1){n/=1024;i++;}
+  return n.toFixed(1)+' '+u[i];
+}
+function fmtDt(ts,long=false){
+  if(!ts) return '—';
+  const d=new Date(ts);
+  if(long) return d.toLocaleString();
+  const diff=Date.now()-ts;
+  if(diff<60000) return 'just now';
+  if(diff<3600000) return Math.floor(diff/60000)+'m ago';
+  if(diff<86400000) return Math.floor(diff/3600000)+'h ago';
+  return d.toLocaleDateString();
+}
+function esc(s=''){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+function toast(msg,type='info'){
+  const c=document.getElementById('toasts');
+  const t=document.createElement('div');
+  t.className='toast '+type;
+  const ico={ok:'✓',err:'✗',warn:'⚠',info:'ℹ'};
+  t.textContent=(ico[type]||'ℹ')+' '+msg;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3200);
+}
+
+// ═══════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closeModal();
+  if((e.ctrlKey||e.metaKey)&&e.key==='k'){ e.preventDefault(); document.getElementById('search-inp')?.focus(); }
+});
 </script>
 </body>
 </html>
